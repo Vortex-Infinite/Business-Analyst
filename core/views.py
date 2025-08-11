@@ -34,6 +34,10 @@ def employee_home(request):
 def dashboard(request):
     return render(request, 'dashboard.html')
 
+# Renders the CEO dashboard page
+def ceo_dashboard(request):
+    return render(request, 'ceo_dashboard.html')
+
 # Renders the document page
 def document(request):
     return render(request, 'document.html')

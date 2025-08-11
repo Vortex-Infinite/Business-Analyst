@@ -39,7 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     email: email,
                     role: 'Employee'
                 }));
-                window.location.href = '/employee_home/';
+                window.location.href = '/ceo_dashboard/';
             } catch (error) {
                 alert(error.message);
             }

@@ -1,0 +1,162 @@
+/* === ADD THESE NEW STYLES TO THE END OF dashboard_style.css === */
+
+/* Header Profile Button & Dropdown */
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    position: relative;
+}
+
+.profile-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.profile-btn img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 2px solid var(--border-color);
+}
+
+.profile-dropdown {
+    position: absolute;
+    top: 60px;
+    right: 0;
+    background-color: var(--card-color);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    box-shadow: 0 10px 30px var(--shadow-color);
+    width: 240px;
+    padding: 10px;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(10px);
+    transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s;
+    z-index: 100;
+}
+
+.profile-dropdown.active {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.dropdown-header {
+    padding: 10px 15px;
+    border-bottom: 1px solid var(--border-color);
+}
+.dropdown-header .name {
+    font-weight: 600;
+    font-size: 15px;
+}
+.dropdown-header .email {
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.dropdown-section {
+    padding: 10px 0;
+}
+
+.dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 12px 15px;
+    border-radius: 8px;
+    text-decoration: none;
+    color: var(--text-primary);
+    font-size: 14px;
+}
+.dropdown-item:hover {
+    background-color: var(--bg-color);
+}
+.dropdown-item i {
+    width: 20px;
+    text-align: center;
+    color: var(--text-secondary);
+}
+
+.theme-switch-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 15px;
+}
+
+/* Employee Dashboard Widgets */
+.employee-widget-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 25px;
+}
+.list-widget .list-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border-color);
+}
+.list-widget .list-item:last-child {
+    border-bottom: none;
+}
+.list-widget .item-name {
+    font-weight: 500;
+}
+.list-widget .item-value {
+    font-weight: 600;
+    color: var(--accent-color);
+}
+.list-widget .item-value.pending {
+    color: var(--warning);
+}
+/* === ADD THESE NEW STYLES TO THE END OF dashboard_style.css === */
+
+/* Functional Clock-In Widget */
+.clock-in-widget-container .title {
+    text-align: center;
+}
+.clock-in-widget {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+}
+.clock-in-widget .status-text {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    background-color: var(--bg-color);
+    padding: 5px 15px;
+    border-radius: 20px;
+}
+.clock-in-widget .timer {
+    font-size: 2.5rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    font-family: monospace;
+}
+.widget-buttons {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+}
+.widget-buttons .btn {
+    flex-grow: 1;
+    padding: 12px;
+    font-size: 15px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s;
+}
+.btn-clock-in { background-color: var(--success); color: white; }
+.btn-start-break { background-color: var(--warning); color: #2d3748; }
+.btn-end-break { background-color: var(--accent-color); color: var(--accent-text); }
+.btn-clock-out { background-color: var(--error); color: white; }

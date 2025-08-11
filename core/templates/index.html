@@ -1,0 +1,63 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ABC INC - Welcome</title>
+    <link rel="stylesheet" href="{% static 'assets/css/style.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <div class="theme-switch-wrapper">
+        <label class="theme-switch" for="theme-checkbox">
+            <input type="checkbox" id="theme-checkbox" aria-label="Toggle dark mode" />
+            <div class="slider round">
+                <span class="knob">
+                    <i class="fas fa-sun" aria-hidden="true"></i>
+                    <i class="fas fa-moon" aria-hidden="true"></i>
+                </span>
+            </div>
+        </label>
+    </div>
+
+    <main class="portal-container">
+        <h1 class="company-name">ABC INC</h1>
+        <p class="portal-subtitle">Please select your role to continue</p>
+
+       <!-- Demo Credentials Info
+        <div class="demo-info" style="background: #f0f8ff; border: 1px solid #007acc; border-radius: 8px; padding: 15px; margin: 20px 0; text-align: center;">
+            <h3 style="margin: 0 0 10px 0; color: #007acc;">Demo Credentials</h3>
+            <div style="display: flex; justify-content: space-around; flex-wrap: wrap; gap: 20px;">
+                <div>
+                    <strong>HR Admin:</strong><br>
+                    Email: hr@abcinc.com<br>
+                    Password: password<br>
+                    OTP: 123456
+                </div>
+                <div>
+                    <strong>Employee:</strong><br>
+                    Email: employee@abcinc.com<br>
+                    Password: password
+                </div>
+            </div>
+        </div>
+         -->
+        
+        <nav class="portal-selection" role="navigation" aria-label="Role selection">
+            <a href="{% url 'hr_login' %}" class="portal-card" role="button" aria-label="Access HR Admin portal">
+                <div class="portal-icon" aria-hidden="true"><i class="fas fa-user-shield"></i></div>
+                <h3>HR Admin</h3>
+                <p>Access management dashboards and tools.</p>
+            </a>
+            <a href="{% url 'employee_login' %}" class="portal-card" role="button" aria-label="Access Employee portal">
+                <div class="portal-icon" aria-hidden="true"><i class="fas fa-user"></i></div>
+                <h3>Employee</h3>
+                <p>Access your personal profile and services.</p>
+            </a>
+        </nav>
+    </main>
+    <footer class="powered-by">Powered by Vortex Infinite</footer>
+    <script src="{% static 'assets/js/script.js' %}"></script>
+</body>
+</html>

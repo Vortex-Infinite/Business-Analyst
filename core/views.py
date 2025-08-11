@@ -1,6 +1,6 @@
-from django.contrib.auth import logout
-from django.shortcuts import redirect
-from django.shortcuts import render
+from django.shortcuts import render, redirect
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
 
 # Renders the main portal page
 def index(request):
@@ -14,6 +14,14 @@ def hr_login(request):
 def employee_login(request):
     return render(request, 'employee_login.html')
 
+# Renders the HR dashboard
+def hr_dashboard(request):
+    return render(request, 'dashboard.html')
+
+# Renders the Employee dashboard
+def employee_dashboard(request):
+    return render(request, 'employee_home.html')
+
 # Renders the HR home page
 def hr_home(request):
     return render(request, 'hr_home.html')
@@ -22,12 +30,15 @@ def hr_home(request):
 def employee_home(request):
     return render(request, 'employee_home.html')
 
-# Renders the dashboard
+# Renders the dashboard page
 def dashboard(request):
     return render(request, 'dashboard.html')
 
-def logout_view(request):
-    logout(request)
-    return redirect('hr_login')
+# Renders the document page
 def document(request):
     return render(request, 'document.html')
+
+# Logout view
+def logout_view(request):
+    logout(request)
+    return redirect('index')

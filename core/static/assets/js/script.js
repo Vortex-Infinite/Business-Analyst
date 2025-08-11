@@ -109,10 +109,9 @@ document.addEventListener('DOMContentLoaded', () => {
         // Logout
         if (logoutBtn) {
             logoutBtn.addEventListener('click', async () => {
-                // Call Django logout endpoint
-                await fetch('/logout/', { method: 'POST', credentials: 'same-origin', headers: { 'X-CSRFToken': getCSRFToken() } });
+                await mockSignOut();
                 localStorage.removeItem('currentUser');
-                window.location.href = '/auth/employee_login/';
+                window.location.href = '/';
             });
         }
 
@@ -143,16 +142,3 @@ document.addEventListener('DOMContentLoaded', () => {
         updateClock(); // Initial call
     }
 });
-
-// Helper to get CSRF token from cookie
-function getCSRFToken() {
-    const name = 'csrftoken';
-    const cookies = document.cookie.split(';');
-    for (let i = 0; i < cookies.length; i++) {
-        let cookie = cookies[i].trim();
-        if (cookie.startsWith(name + '=')) {
-            return decodeURIComponent(cookie.substring(name.length + 1));
-        }
-    }
-    return '';
-}

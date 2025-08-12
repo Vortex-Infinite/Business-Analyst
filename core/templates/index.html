@@ -45,12 +45,12 @@
          -->
         
         <nav class="portal-selection" role="navigation" aria-label="Role selection">
-            <a href="{% url 'hr_login' %}" class="portal-card" role="button" aria-label="Access HR Admin portal">
+            <a href="{% url 'core:hr_login' %}" class="portal-card" role="button" aria-label="Access HR Admin portal">
                 <div class="portal-icon" aria-hidden="true"><i class="fas fa-user-shield"></i></div>
                 <h3>Financial Analyst</h3>
                 <p>Access management dashboards and tools.</p>
             </a>
-            <a href="{% url 'employee_login' %}" class="portal-card" role="button" aria-label="Access Employee portal">
+            <a href="{% url 'core:employee_login' %}" class="portal-card" role="button" aria-label="Access Employee portal">
                 <div class="portal-icon" aria-hidden="true"><i class="fas fa-user"></i></div>
                 <h3>CEO</h3>
                 <p>Access your Organization.</p>

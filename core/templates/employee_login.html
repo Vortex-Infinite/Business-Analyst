@@ -21,18 +21,25 @@
         </label>
     </div>
     <main class="login-container">
-        <h1 class="company-name">ABC INC</h1>
-        <h2>Employee Portal</h2>
+        <h1 class="company-name">ORBIS</h1>
+        <h2>CEO Portal</h2>
         <p class="subtitle">Please log in to continue</p>
 
-        <form id="employee-login-form">
+        {% if error %}
+            <div class="error-message" style="color: red; background: #ffe6e6; padding: 10px; border-radius: 5px; margin-bottom: 15px;">
+                {{ error }}
+            </div>
+        {% endif %}
+
+        <form method="post">
+            {% csrf_token %}
             <div class="input-group">
-                <label for="employeeId">Employee Email</label>
-                <input type="email" id="employeeId" required aria-describedby="employee-email-help">
+                <label for="username">Username</label>
+                <input type="text" name="username" id="username" required>
             </div>
             <div class="input-group">
-                <label for="employeePassword">Password</label>
-                <input type="password" id="employeePassword" required aria-describedby="employee-password-help">
+                <label for="password">Password</label>
+                <input type="password" name="password" id="password" required>
             </div>
             <button type="submit">Login</button>
         </form>

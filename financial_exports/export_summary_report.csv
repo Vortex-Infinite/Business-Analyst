@@ -1,0 +1,17 @@
+category,filename,size_kb,full_path
+root,bottom_50_revenue_days.csv,1.96,financial_exports\analysis\bottom_50_revenue_days.csv
+root,day_of_week_analysis.csv,0.62,financial_exports\analysis\day_of_week_analysis.csv
+root,seasonal_analysis.csv,0.74,financial_exports\analysis\seasonal_analysis.csv
+root,top_50_revenue_days.csv,1.94,financial_exports\analysis\top_50_revenue_days.csv
+root,financial_data_5_years_complete.csv,135.46,financial_exports\complete\financial_data_5_years_complete.csv
+root,financial_data_5_years_enhanced.csv,249.48,financial_exports\complete\financial_data_5_years_enhanced.csv
+root,financial_data_essential.csv,81.93,financial_exports\complete\financial_data_essential.csv
+root,financial_data_key_metrics.csv,48.98,financial_exports\complete\financial_data_key_metrics.csv
+root,monthly_detailed_summary.csv,11.21,financial_exports\summaries\monthly_detailed_summary.csv
+root,quarterly_detailed_summary.csv,3.11,financial_exports\summaries\quarterly_detailed_summary.csv
+root,yearly_summary_analysis.csv,1.05,financial_exports\summaries\yearly_summary_analysis.csv
+root,financial_year_2021.csv,28.96,financial_exports\yearly\financial_year_2021.csv
+root,financial_year_2022.csv,29.41,financial_exports\yearly\financial_year_2022.csv
+root,financial_year_2023.csv,29.73,financial_exports\yearly\financial_year_2023.csv
+root,financial_year_2024.csv,29.89,financial_exports\yearly\financial_year_2024.csv
+root,financial_year_2025.csv,17.94,financial_exports\yearly\financial_year_2025.csv

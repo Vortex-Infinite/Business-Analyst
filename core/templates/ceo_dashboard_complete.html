@@ -1,0 +1,444 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ORBIS - CEO Dashboard</title>
+    <link rel="stylesheet" href="{% static 'assets/css/ceo_dashboard_style.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="ceo-dashboard">
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo-container">
+                <div class="logo-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <div class="sidebar-logo">ORBIS</div>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <div class="nav-section">
+                <div class="nav-section-title">EXECUTIVE</div>
+                <a href="#" class="nav-item active" data-page="dashboard">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>CEO Dashboard</span>
+                </a>
+                <a href="#" class="nav-item" data-page="analytics">
+                    <i class="fas fa-chart-pie"></i>
+                    <span>Analytics</span>
+                </a>
+                <a href="#" class="nav-item" data-page="financial">
+                    <i class="fas fa-dollar-sign"></i>
+                    <span>Financial Overview</span>
+                </a>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-section-title">REPORTS</div>
+                <a href="#" class="nav-item" data-page="quarterly">
+                    <i class="fas fa-calendar-alt"></i>
+                    <span>Quarterly Reports</span>
+                </a>
+                <a href="#" class="nav-item" data-page="yearly">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Yearly Analysis</span>
+                </a>
+                <a href="#" class="nav-item" data-page="performance">
+                    <i class="fas fa-trophy"></i>
+                    <span>Performance</span>
+                </a>
+            </div>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="theme-switch-container">
+                <span class="theme-label">Dark Mode</span>
+                <label class="theme-switch" for="theme-checkbox">
+                    <input type="checkbox" id="theme-checkbox">
+                    <div class="slider round">
+                        <div class="knob">
+                            <i class="fas fa-sun"></i>
+                            <i class="fas fa-moon"></i>
+                        </div>
+                    </div>
+                </label>
+            </div>
+            <a href="{% url 'core:logout' %}" class="logout-btn">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Logout</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-wrapper">
+        <!-- Header -->
+        <header class="dashboard-header">
+            <div class="header-left">
+                <div class="header-title">
+                    CEO Dashboard - {{ company.name|default:"ORBIS Financial" }}
+                    <span id="live-time"></span>
+                </div>
+            </div>
+            <div class="header-actions">
+                <div class="notifications">
+                    <button class="notification-btn">
+                        <i class="fas fa-bell"></i>
+                        <span class="notification-badge">{{ quarterly_summaries|length }}</span>
+                    </button>
+                </div>
+                <div class="profile-container">
+                    <div class="profile-info">
+                        <div class="name">{{ user.first_name|default:"CEO" }} {{ user.last_name|default:"Executive" }}</div>
+                        <div class="email">{{ user.email|default:"ceo@orbis.com" }}</div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Dashboard Content -->
+        <main class="main-content">
+            <!-- Executive KPI Row -->
+            <div class="executive-kpi-row">
+                <div class="kpi-card primary">
+                    <div class="kpi-header">
+                        <div class="kpi-icon">
+                            <i class="fas fa-dollar-sign"></i>
+                        </div>
+                        <div class="kpi-trend {% if revenue_growth > 0 %}positive{% elif revenue_growth < 0 %}negative{% else %}neutral{% endif %}">
+                            <i class="fas fa-arrow-{% if revenue_growth > 0 %}up{% elif revenue_growth < 0 %}down{% else %}right{% endif %}"></i>
+                            {{ revenue_growth|default:"0" }}%
+                        </div>
+                    </div>
+                    <div class="kpi-content">
+                        <div class="kpi-value">${{ current_year_stats.total_revenue|floatformat:0|default:"0" }}</div>
+                        <div class="kpi-label">Total Revenue ({{ current_year }})</div>
+                        <div class="kpi-comparison">vs ${{ previous_year_stats.total_revenue|floatformat:0|default:"0" }} last year</div>
+                    </div>
+                </div>
+
+                <div class="kpi-card success">
+                    <div class="kpi-header">
+                        <div class="kpi-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div class="kpi-trend {% if profit_growth > 0 %}positive{% elif profit_growth < 0 %}negative{% else %}neutral{% endif %}">
+                            <i class="fas fa-arrow-{% if profit_growth > 0 %}up{% elif profit_growth < 0 %}down{% else %}right{% endif %}"></i>
+                            {{ profit_growth|default:"0" }}%
+                        </div>
+                    </div>
+                    <div class="kpi-content">
+                        <div class="kpi-value">{{ current_year_stats.avg_profit_margin|floatformat:1|default:"0" }}%</div>
+                        <div class="kpi-label">Average Profit Margin</div>
+                        <div class="kpi-comparison">vs {{ previous_year_stats.avg_profit_margin|floatformat:1|default:"0" }}% last year</div>
+                    </div>
+                </div>
+
+                <div class="kpi-card info">
+                    <div class="kpi-header">
+                        <div class="kpi-icon">
+                            <i class="fas fa-calendar"></i>
+                        </div>
+                        <div class="kpi-trend positive">
+                            <i class="fas fa-arrow-up"></i>
+                            Live Data
+                        </div>
+                    </div>
+                    <div class="kpi-content">
+                        <div class="kpi-value">{{ current_quarter }}</div>
+                        <div class="kpi-label">Current Quarter</div>
+                        <div class="kpi-comparison">Last updated: {% if latest_data %}{{ latest_data.date }}{% else %}Today{% endif %}</div>
+                    </div>
+                </div>
+
+                <div class="kpi-card warning">
+                    <div class="kpi-header">
+                        <div class="kpi-icon">
+                            <i class="fas fa-trending-up"></i>
+                        </div>
+                        <div class="kpi-trend positive">
+                            <i class="fas fa-arrow-up"></i>
+                            Best Day
+                        </div>
+                    </div>
+                    <div class="kpi-content">
+                        <div class="kpi-value">{% if top_performing_days.0 %}&{{ top_performing_days.0.revenue|floatformat:0 }}{% else %}$0{% endif %}</div>
+                        <div class="kpi-label">Highest Revenue Day</div>
+                        <div class="kpi-comparison">{% if top_performing_days.0 %}{{ top_performing_days.0.date }}{% else %}N/A{% endif %}</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dashboard Grid -->
+            <div class="ceo-dash-grid">
+                <!-- Revenue Trend Chart -->
+                <div class="widget chart-widget large">
+                    <div class="widget-header">
+                        <div class="title">Monthly Revenue & Profit Trend</div>
+                        <div class="widget-actions">
+                            <button class="action-btn">
+                                <i class="fas fa-download"></i>
+                            </button>
+                            <button class="action-btn">
+                                <i class="fas fa-expand"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="widget-content">
+                        <canvas id="revenueAnalysisChart" width="800" height="300"></canvas>
+                    </div>
+                </div>
+
+                <!-- Performance Summary -->
+                <div class="widget">
+                    <div class="widget-header">
+                        <div class="title">Latest Performance</div>
+                    </div>
+                    <div class="widget-content">
+                        {% if latest_data %}
+                        <div class="performance-summary">
+                            <div class="summary-item">
+                                <div class="summary-label">Latest Revenue</div>
+                                <div class="summary-value">${{ latest_data.revenue|floatformat:0 }}</div>
+                            </div>
+                            <div class="summary-item">
+                                <div class="summary-label">Latest Profit</div>
+                                <div class="summary-value">${{ latest_data.profit|floatformat:0 }}</div>
+                            </div>
+                            <div class="summary-item">
+                                <div class="summary-label">Profit Margin</div>
+                                <div class="summary-value">{{ latest_data.profit_margin|floatformat:1 }}%</div>
+                            </div>
+                            <div class="summary-item">
+                                <div class="summary-label">Date</div>
+                                <div class="summary-value">{{ latest_data.date }}</div>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="no-data">No recent data available</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Top Performing Days -->
+                <div class="widget">
+                    <div class="widget-header">
+                        <div class="title">Top Performing Days ({{ current_year }})</div>
+                    </div>
+                    <div class="widget-content">
+                        <div class="performance-list">
+                            {% for day in top_performing_days|slice:":5" %}
+                            <div class="performance-item">
+                                <div class="performance-date">{{ day.date }}</div>
+                                <div class="performance-metrics">
+                                    <div class="metric">
+                                        <span class="metric-label">Revenue:</span>
+                                        <span class="metric-value">${{ day.revenue|floatformat:0 }}</span>
+                                    </div>
+                                    <div class="metric">
+                                        <span class="metric-label">Margin:</span>
+                                        <span class="metric-value">{{ day.profit_margin|floatformat:1 }}%</span>
+                                    </div>
+                                </div>
+                            </div>
+                            {% empty %}
+                            <div class="no-data">No performance data available</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quarterly Summary -->
+                <div class="widget">
+                    <div class="widget-header">
+                        <div class="title">Quarterly Performance</div>
+                    </div>
+                    <div class="widget-content">
+                        <div class="quarterly-grid">
+                            {% for quarter in quarterly_summaries|slice:":4" %}
+                            <div class="quarter-card">
+                                <div class="quarter-title">{{ quarter.year }} {{ quarter.quarter }}</div>
+                                <div class="quarter-metrics">
+                                    <div class="quarter-metric">
+                                        <span class="label">Revenue:</span>
+                                        <span class="value">${{ quarter.total_revenue|floatformat:0 }}</span>
+                                    </div>
+                                    <div class="quarter-metric">
+                                        <span class="label">Profit:</span>
+                                        <span class="value">${{ quarter.total_profit|floatformat:0 }}</span>
+                                    </div>
+                                    <div class="quarter-metric">
+                                        <span class="label">Margin:</span>
+                                        <span class="value">{{ quarter.avg_profit_margin|floatformat:1 }}%</span>
+                                    </div>
+                                </div>
+                            </div>
+                            {% empty %}
+                            <div class="no-data">No quarterly data available</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Financial Insights -->
+                <div class="widget">
+                    <div class="widget-header">
+                        <div class="title">Financial Insights</div>
+                    </div>
+                    <div class="widget-content">
+                        <div class="insights-list">
+                            <div class="insight-item {% if revenue_growth > 0 %}positive{% else %}negative{% endif %}">
+                                <i class="fas fa-chart-line"></i>
+                                <div class="insight-text">
+                                    Revenue {% if revenue_growth > 0 %}increased{% else %}decreased{% endif %} by {{ revenue_growth|floatformat:1 }}% YoY
+                                </div>
+                            </div>
+                            <div class="insight-item {% if profit_growth > 0 %}positive{% else %}negative{% endif %}">
+                                <i class="fas fa-money-bill-wave"></i>
+                                <div class="insight-text">
+                                    Profit {% if profit_growth > 0 %}increased{% else %}decreased{% endif %} by {{ profit_growth|floatformat:1 }}% YoY
+                                </div>
+                            </div>
+                            <div class="insight-item positive">
+                                <i class="fas fa-calendar-check"></i>
+                                <div class="insight-text">
+                                    Current quarter ({{ current_quarter }}) performance tracking
+                                </div>
+                            </div>
+                            <div class="insight-item info">
+                                <i class="fas fa-database"></i>
+                                <div class="insight-text">
+                                    Total records analyzed: {{ company.daily_data.count }} days
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Executive Actions -->
+                <div class="widget">
+                    <div class="widget-header">
+                        <div class="title">Executive Actions</div>
+                    </div>
+                    <div class="widget-content">
+                        <div class="executive-actions">
+                            <button class="exec-action-btn primary">
+                                <i class="fas fa-file-alt"></i>
+                                Generate Board Report
+                            </button>
+                            <button class="exec-action-btn secondary">
+                                <i class="fas fa-chart-bar"></i>
+                                View Analytics
+                            </button>
+                            <button class="exec-action-btn secondary">
+                                <i class="fas fa-calendar"></i>
+                                Schedule Review
+                            </button>
+                            <button class="exec-action-btn secondary">
+                                <i class="fas fa-download"></i>
+                                Export Data
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <div class="dashboard-footer">
+            <div class="powered-by">
+                Powered by <strong>ORBIS Analytics</strong> &copy; 2025 | CEO Dashboard
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Dynamic chart data from Django
+        const monthlyData = {{ monthly_data|safe }};
+
+        // Initialize charts
+        function initCharts() {
+            const chartCanvas = document.getElementById('revenueAnalysisChart');
+            if (chartCanvas && monthlyData) {
+                const ctx = chartCanvas.getContext('2d');
+                
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: monthlyData.map(item => item.month),
+                        datasets: [
+                            {
+                                label: 'Revenue ($)',
+                                data: monthlyData.map(item => item.revenue),
+                                borderColor: '#4299e1',
+                                backgroundColor: 'rgba(66, 153, 225, 0.1)',
+                                borderWidth: 3,
+                                fill: true,
+                                tension: 0.4
+                            },
+                            {
+                                label: 'Profit ($)',  
+                                data: monthlyData.map(item => item.profit),
+                                borderColor: '#48bb78',
+                                backgroundColor: 'rgba(72, 187, 120, 0.1)',
+                                borderWidth: 3,
+                                fill: true,
+                                tension: 0.4
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: 'top'
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function(value) {
+                                        return '$' + value.toLocaleString();
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        // Live time update
+        function updateTime() {
+            const now = new Date();
+            const timeElement = document.getElementById('live-time');
+            if (timeElement) {
+                timeElement.textContent = now.toLocaleString();
+            }
+        }
+
+        // Initialize everything
+        document.addEventListener('DOMContentLoaded', function() {
+            initCharts();
+            updateTime();
+            setInterval(updateTime, 1000);
+        });
+
+        // Theme switching
+        const themeToggle = document.getElementById('theme-checkbox');
+        if (themeToggle) {
+            themeToggle.addEventListener('change', function() {
+                document.body.classList.toggle('dark-theme');
+            });
+        }
+    </script>
+</body>
+</html>

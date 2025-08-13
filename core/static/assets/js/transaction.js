@@ -1,203 +1,244 @@
-// Transaction Page Specific JavaScript
+// Transaction Management JavaScript
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialize transaction page components
-    initTransactionRefresh();
-    initAnomalyUpdates();
-    initNavigation();
-    initScrollEffects();
+    // Initialize real-time updates
+    initRealTimeUpdates();
     
-    console.log('Transaction page initialized');
+    // Initialize theme switching
+    initThemeSwitch();
     
-    // Initialize scroll effects for dynamic sidebar
-    function initScrollEffects() {
-        const mainWrapper = document.querySelector('.main-wrapper');
-        const sidebar = document.querySelector('.sidebar');
-        const header = document.querySelector('.dashboard-header');
-        
-        if (mainWrapper) {
-            let scrollTimeout;
-            
-            mainWrapper.addEventListener('scroll', function() {
-                const scrollTop = this.scrollTop;
-                
-                // Add scrolled class for enhanced shadow
-                if (scrollTop > 10) {
-                    sidebar?.classList.add('scrolled');
-                    header?.classList.add('scrolled');
-                } else {
-                    sidebar?.classList.remove('scrolled');
-                    header?.classList.remove('scrolled');
-                }
-                
-                // Clear existing timeout
-                clearTimeout(scrollTimeout);
-                
-                // Add scrolling class for animations
-                document.body.classList.add('scrolling');
-                
-                // Remove scrolling class after scroll ends
-                scrollTimeout = setTimeout(() => {
-                    document.body.classList.remove('scrolling');
-                }, 150);
-            });
-        }
-        
-        // Also handle window scroll for fallback
-        window.addEventListener('scroll', function() {
-            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-            
-            if (scrollTop > 10) {
-                sidebar?.classList.add('scrolled');
-                header?.classList.add('scrolled');
-            } else {
-                sidebar?.classList.remove('scrolled');
-                header?.classList.remove('scrolled');
-            }
-        });
-    }
+    // Initialize sidebar toggle
+    initSidebarToggle();
     
-    // Initialize navigation for transaction page
-    function initNavigation() {
-        const navItems = document.querySelectorAll('.nav-item');
-        navItems.forEach(item => {
-            item.addEventListener('click', function(e) {
-                // Only prevent default for items without href or with href="#"
-                if (!this.href || this.href.endsWith('#')) {
-                    e.preventDefault();
-                    navItems.forEach(nav => nav.classList.remove('active'));
-                    this.classList.add('active');
-                } else {
-                    // For items with real URLs, add a loading transition
-                    navItems.forEach(nav => nav.classList.remove('active'));
-                    this.classList.add('active');
-                    
-                    // Add a brief transition effect
-                    this.style.transform = 'scale(0.95)';
-                    setTimeout(() => {
-                        this.style.transform = 'translateX(6px)';
-                    }, 150);
-                }
-            });
-        });
-    }
+    // Initialize profile dropdown
+    initProfileDropdown();
     
-    // Auto-refresh transaction data
-    function initTransactionRefresh() {
-        const refreshBtn = document.querySelector('.transaction-box .action-btn');
-        if (refreshBtn) {
-            refreshBtn.addEventListener('click', function() {
-                showNotification('Transaction data refreshed', 'success');
-                // Here you would typically make an AJAX call to refresh data
-            });
-        }
-        
-        // Auto-refresh every 30 seconds
-        setInterval(() => {
-            updateTransactionTimes();
-        }, 30000);
-    }
-    
-    // Update transaction times to show real-time feel
-    function updateTransactionTimes() {
-        const timeElements = document.querySelectorAll('.transaction-time');
-        timeElements.forEach((element, index) => {
-            const currentTime = element.textContent;
-            if (currentTime.includes('minutes ago')) {
-                const minutes = parseInt(currentTime.match(/\d+/)[0]);
-                element.textContent = `${minutes + 1} minutes ago`;
-            } else if (currentTime.includes('hour ago')) {
-                element.textContent = '1 hour ago';
-            } else if (currentTime.includes('hours ago')) {
-                const hours = parseInt(currentTime.match(/\d+/)[0]);
-                element.textContent = `${hours} hours ago`;
-            }
-        });
-    }
-    
-    // Initialize anomaly detection features
-    function initAnomalyUpdates() {
-        const anomalyBtn = document.querySelectorAll('.transaction-box')[1].querySelector('.action-btn');
-        if (anomalyBtn) {
-            anomalyBtn.addEventListener('click', function() {
-                showNotification('Anomaly detection settings updated', 'info');
-            });
-        }
-    }
-    
-    // Notification system (reused from dashboard)
-    function showNotification(message, type = 'info') {
-        const notification = document.createElement('div');
-        notification.className = `notification notification-${type}`;
-        notification.innerHTML = `
-            <div class="notification-content">
-                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
-                <span>${message}</span>
-            </div>
-            <button class="notification-close">
-                <i class="fas fa-times"></i>
-            </button>
-        `;
-        
-        // Add notification styles
-        notification.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: var(--card-color);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 16px;
-            box-shadow: 0 8px 25px var(--shadow-color);
-            z-index: 1000;
-            max-width: 300px;
-            transform: translateX(100%);
-            transition: transform 0.3s ease;
-        `;
-        
-        const closeBtn = notification.querySelector('.notification-close');
-        closeBtn.style.cssText = `
-            background: none;
-            border: none;
-            color: var(--text-secondary);
-            cursor: pointer;
-            padding: 4px;
-            margin-left: 12px;
-        `;
-        
-        const content = notification.querySelector('.notification-content');
-        content.style.cssText = `
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            color: var(--text-primary);
-            font-size: 14px;
-        `;
-        
-        document.body.appendChild(notification);
-        
-        // Animate in
-        setTimeout(() => {
-            notification.style.transform = 'translateX(0)';
-        }, 100);
-        
-        // Auto remove after 4 seconds
-        const autoRemove = setTimeout(() => {
-            removeNotification(notification);
-        }, 4000);
-        
-        // Manual close
-        closeBtn.addEventListener('click', () => {
-            clearTimeout(autoRemove);
-            removeNotification(notification);
-        });
-    }
-    
-    function removeNotification(notification) {
-        notification.style.transform = 'translateX(100%)';
-        setTimeout(() => {
-            if (notification.parentNode) {
-                notification.parentNode.removeChild(notification);
-            }
-        }, 300);
-    }
+    // Initialize logout functionality
+    initLogout();
 });
+
+function initRealTimeUpdates() {
+    // Update data every 5 seconds
+    setInterval(updateTransactionData, 5000);
+    
+    // Initial update
+    updateTransactionData();
+}
+
+function updateTransactionData() {
+    fetch('/api/transactions/')
+        .then(response => response.json())
+        .then(data => {
+            updateTransactionList(data.transactions);
+            updateAnomalyList(data.alerts);
+            updateAccountBalance(data.account_balance);
+            updateStatistics(data);
+        })
+        .catch(error => {
+            console.error('Error fetching transaction data:', error);
+        });
+}
+
+function updateTransactionList(transactions) {
+    const transactionList = document.getElementById('transaction-list');
+    if (!transactionList) return;
+    
+    if (transactions.length === 0) {
+        transactionList.innerHTML = `
+            <div class="no-transactions">
+                <i class="fas fa-info-circle"></i>
+                <p>No transactions found. Start the transaction generator to see live data.</p>
+            </div>
+        `;
+        return;
+    }
+    
+    let html = '';
+    transactions.forEach(transaction => {
+        const isCredit = transaction.receiver === 'TechCorp Solutions';
+        const amountClass = isCredit ? 'credit' : 'debit';
+        const iconClass = isCredit ? 'arrow-down' : 'arrow-up';
+        const amountSign = isCredit ? '+' : '-';
+        const description = isCredit ? 
+            `Payment Received - ${transaction.sender}` : 
+            `Payment Sent - ${transaction.receiver}`;
+        
+        const anomalyBadge = transaction.is_anomaly ? 
+            '<span class="anomaly-badge">ANOMALY</span>' : '';
+        
+        html += `
+            <div class="transaction-item ${transaction.is_anomaly ? 'anomaly' : ''}">
+                <div class="transaction-icon ${amountClass}">
+                    <i class="fas fa-${iconClass}"></i>
+                </div>
+                <div class="transaction-details">
+                    <div class="transaction-description">
+                        ${description}
+                        ${anomalyBadge}
+                    </div>
+                    <div class="transaction-time">${transaction.time_ago}</div>
+                </div>
+                <div class="transaction-amount ${amountClass}">
+                    ${amountSign}₹${parseFloat(transaction.amount).toLocaleString('en-IN', {minimumFractionDigits: 2})}
+                </div>
+            </div>
+        `;
+    });
+    
+    transactionList.innerHTML = html;
+}
+
+function updateAnomalyList(alerts) {
+    const anomalyList = document.getElementById('anomaly-list');
+    if (!anomalyList) return;
+    
+    if (alerts.length === 0) {
+        anomalyList.innerHTML = `
+            <div class="no-alerts">
+                <i class="fas fa-shield-alt"></i>
+                <p>No active alerts. All transactions are normal.</p>
+            </div>
+        `;
+        return;
+    }
+    
+    let html = '';
+    alerts.forEach(alert => {
+        const iconClass = alert.severity === 'HIGH' ? 'exclamation-triangle' : 
+                         alert.severity === 'MEDIUM' ? 'exclamation-circle' : 'info-circle';
+        
+        html += `
+            <div class="anomaly-item ${alert.severity.toLowerCase()}">
+                <div class="anomaly-icon">
+                    <i class="fas fa-${iconClass}"></i>
+                </div>
+                <div class="anomaly-details">
+                    <div class="anomaly-title">${alert.title}</div>
+                    <div class="anomaly-description">${alert.description}</div>
+                    <div class="anomaly-time">${alert.time_ago}</div>
+                </div>
+                <div class="anomaly-severity ${alert.severity.toLowerCase()}">${alert.severity}</div>
+            </div>
+        `;
+    });
+    
+    anomalyList.innerHTML = html;
+}
+
+function updateAccountBalance(balance) {
+    const balanceElement = document.querySelector('.balance-amount');
+    if (balanceElement) {
+        balanceElement.textContent = `₹${parseFloat(balance).toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
+    }
+}
+
+function updateStatistics(data) {
+    // Update transaction stats
+    const totalElement = document.querySelector('.transaction-stats .stat-item:nth-child(1) .stat-value');
+    const anomaliesElement = document.querySelector('.transaction-stats .stat-item:nth-child(2) .stat-value');
+    const percentageElement = document.querySelector('.transaction-stats .stat-item:nth-child(3) .stat-value');
+    
+    if (totalElement) totalElement.textContent = data.total_transactions;
+    if (anomaliesElement) anomaliesElement.textContent = data.anomaly_count;
+    if (percentageElement) {
+        const percentage = data.total_transactions > 0 ? 
+            ((data.anomaly_count / data.total_transactions) * 100).toFixed(1) : '0.0';
+        percentageElement.textContent = percentage + '%';
+    }
+}
+
+function initThemeSwitch() {
+    const themeCheckbox = document.getElementById('theme-checkbox');
+    if (!themeCheckbox) return;
+    
+    // Load saved theme preference
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'light') {
+        themeCheckbox.checked = true;
+        document.body.classList.remove('dark-mode');
+        document.body.classList.add('light-mode');
+    }
+    
+    themeCheckbox.addEventListener('change', function() {
+        if (this.checked) {
+            document.body.classList.remove('dark-mode');
+            document.body.classList.add('light-mode');
+            localStorage.setItem('theme', 'light');
+        } else {
+            document.body.classList.remove('light-mode');
+            document.body.classList.add('dark-mode');
+            localStorage.setItem('theme', 'dark');
+        }
+    });
+}
+
+function initSidebarToggle() {
+    const sidebarToggle = document.getElementById('sidebar-toggle');
+    const sidebar = document.getElementById('sidebar');
+    
+    if (!sidebarToggle || !sidebar) return;
+    
+    sidebarToggle.addEventListener('click', function() {
+        sidebar.classList.toggle('collapsed');
+        
+        const icon = this.querySelector('i');
+        const text = this.querySelector('span');
+        
+        if (sidebar.classList.contains('collapsed')) {
+            icon.className = 'fas fa-chevron-right';
+            text.textContent = 'Expand';
+        } else {
+            icon.className = 'fas fa-chevron-left';
+            text.textContent = 'Collapse';
+        }
+    });
+}
+
+function initProfileDropdown() {
+    const profileBtn = document.getElementById('profile-btn');
+    const profileDropdown = document.getElementById('profile-dropdown');
+    
+    if (!profileBtn || !profileDropdown) return;
+    
+    profileBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        profileDropdown.classList.toggle('show');
+    });
+    
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function() {
+        profileDropdown.classList.remove('show');
+    });
+}
+
+function initLogout() {
+    const logoutBtn = document.getElementById('logout-btn');
+    if (!logoutBtn) return;
+    
+    logoutBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        
+        // Show confirmation dialog
+        if (confirm('Are you sure you want to log out?')) {
+            window.location.href = '/logout/';
+        }
+    });
+}
+
+// Live time update
+function updateLiveTime() {
+    const liveTimeElement = document.getElementById('live-time');
+    if (liveTimeElement) {
+        const now = new Date();
+        const timeString = now.toLocaleTimeString('en-US', {
+            hour12: false,
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+        });
+        liveTimeElement.textContent = ` • ${timeString}`;
+    }
+}
+
+// Update time every second
+setInterval(updateLiveTime, 1000);
+updateLiveTime(); // Initial call

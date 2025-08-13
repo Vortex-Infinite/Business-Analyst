@@ -23,4 +23,5 @@ urlpatterns = [
     
     # API endpoints
     path('api/financial_data/', views.api_financial_data, name='api_financial_data'),
+    path('api/transactions/', views.api_transactions, name='api_transactions'),
 ]

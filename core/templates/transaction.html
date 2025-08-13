@@ -156,11 +156,29 @@
             <!-- Transaction Header -->
             <div class="transaction-header">
                 <div class="account-info">
-                    <h2 class="account-name">TechCorp Solutions</h2>
+                    <h2 class="account-name">{{ account_name }}</h2>
                     <p class="account-details">
-                        <span class="account-number">ACC: 1234567890</span>
-                        <span class="account-type">Current Account</span>
+                        <span class="account-number">ACC: {{ account_number }}</span>
+                        <span class="account-type">{{ account_type }}</span>
                     </p>
+                    <div class="account-balance">
+                        <span class="balance-label">Current Balance:</span>
+                        <span class="balance-amount">₹{{ account.balance|floatformat:2 }}</span>
+                    </div>
+                </div>
+                <div class="transaction-stats">
+                    <div class="stat-item">
+                        <div class="stat-value">{{ anomaly_stats.total }}</div>
+                        <div class="stat-label">Total Transactions</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">{{ anomaly_stats.anomalies }}</div>
+                        <div class="stat-label">Anomalies Detected</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">{{ anomaly_stats.percentage }}%</div>
+                        <div class="stat-label">Anomaly Rate</div>
+                    </div>
                 </div>
             </div>
 
@@ -183,61 +201,37 @@
                         </div>
                     </div>
                     <div class="box-content">
-                        <div class="transaction-list">
-                            <div class="transaction-item">
-                                <div class="transaction-icon credit">
-                                    <i class="fas fa-arrow-down"></i>
+                        <div class="transaction-list" id="transaction-list">
+                            {% if recent_transactions %}
+                                {% for transaction in recent_transactions %}
+                                <div class="transaction-item {% if transaction.is_anomaly %}anomaly{% endif %}">
+                                    <div class="transaction-icon {% if transaction.receiver == account_name %}credit{% else %}debit{% endif %}">
+                                        <i class="fas fa-{% if transaction.receiver == account_name %}arrow-down{% else %}arrow-up{% endif %}"></i>
+                                    </div>
+                                    <div class="transaction-details">
+                                        <div class="transaction-description">
+                                            {% if transaction.receiver == account_name %}
+                                                Payment Received - {{ transaction.sender }}
+                                            {% else %}
+                                                Payment Sent - {{ transaction.receiver }}
+                                            {% endif %}
+                                            {% if transaction.is_anomaly %}
+                                                <span class="anomaly-badge">ANOMALY</span>
+                                            {% endif %}
+                                        </div>
+                                        <div class="transaction-time">{{ transaction.timestamp|date:"M d, H:i" }}</div>
+                                    </div>
+                                    <div class="transaction-amount {% if transaction.receiver == account_name %}credit{% else %}debit{% endif %}">
+                                        {% if transaction.receiver == account_name %}+{% else %}-{% endif %}₹{{ transaction.amount|floatformat:2 }}
+                                    </div>
                                 </div>
-                                <div class="transaction-details">
-                                    <div class="transaction-description">Payment Received - Client ABC</div>
-                                    <div class="transaction-time">2 minutes ago</div>
+                                {% endfor %}
+                            {% else %}
+                                <div class="no-transactions">
+                                    <i class="fas fa-info-circle"></i>
+                                    <p>No transactions found. Start the transaction generator to see live data.</p>
                                 </div>
-                                <div class="transaction-amount credit">+₹45,000</div>
-                            </div>
-                            
-                            <div class="transaction-item">
-                                <div class="transaction-icon debit">
-                                    <i class="fas fa-arrow-up"></i>
-                                </div>
-                                <div class="transaction-details">
-                                    <div class="transaction-description">Office Supplies Purchase</div>
-                                    <div class="transaction-time">15 minutes ago</div>
-                                </div>
-                                <div class="transaction-amount debit">-₹2,500</div>
-                            </div>
-                            
-                            <div class="transaction-item">
-                                <div class="transaction-icon credit">
-                                    <i class="fas fa-arrow-down"></i>
-                                </div>
-                                <div class="transaction-details">
-                                    <div class="transaction-description">Service Payment - Project XYZ</div>
-                                    <div class="transaction-time">1 hour ago</div>
-                                </div>
-                                <div class="transaction-amount credit">+₹75,000</div>
-                            </div>
-                            
-                            <div class="transaction-item">
-                                <div class="transaction-icon debit">
-                                    <i class="fas fa-arrow-up"></i>
-                                </div>
-                                <div class="transaction-details">
-                                    <div class="transaction-description">Utility Bill Payment</div>
-                                    <div class="transaction-time">2 hours ago</div>
-                                </div>
-                                <div class="transaction-amount debit">-₹8,750</div>
-                            </div>
-                            
-                            <div class="transaction-item">
-                                <div class="transaction-icon credit">
-                                    <i class="fas fa-arrow-down"></i>
-                                </div>
-                                <div class="transaction-details">
-                                    <div class="transaction-description">Consulting Fee - Q3 Review</div>
-                                    <div class="transaction-time">3 hours ago</div>
-                                </div>
-                                <div class="transaction-amount credit">+₹25,000</div>
-                            </div>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
@@ -260,66 +254,59 @@
                     </div>
                     <div class="box-content">
                         <div class="anomaly-status">
-                            <div class="status-indicator safe">
-                                <i class="fas fa-check-circle"></i>
-                                <span>All Systems Normal</span>
+                            <div class="status-indicator {% if alert_stats.high > 0 %}danger{% elif alert_stats.medium > 0 %}warning{% else %}safe{% endif %}">
+                                <i class="fas fa-{% if alert_stats.high > 0 %}exclamation-triangle{% elif alert_stats.medium > 0 %}exclamation-circle{% else %}check-circle{% endif %}"></i>
+                                <span>
+                                    {% if alert_stats.high > 0 %}
+                                        {{ alert_stats.high }} High Risk Alert{{ alert_stats.high|pluralize }}
+                                    {% elif alert_stats.medium > 0 %}
+                                        {{ alert_stats.medium }} Medium Risk Alert{{ alert_stats.medium|pluralize }}
+                                    {% else %}
+                                        All Systems Normal
+                                    {% endif %}
+                                </span>
                             </div>
                         </div>
                         
-                        <div class="anomaly-list">
-                            <div class="anomaly-item low">
-                                <div class="anomaly-icon">
-                                    <i class="fas fa-info-circle"></i>
+                        <div class="anomaly-list" id="anomaly-list">
+                            {% if recent_alerts %}
+                                {% for alert in recent_alerts %}
+                                <div class="anomaly-item {{ alert.severity|lower }}">
+                                    <div class="anomaly-icon">
+                                        <i class="fas fa-{% if alert.severity == 'HIGH' %}exclamation-triangle{% elif alert.severity == 'MEDIUM' %}exclamation-circle{% else %}info-circle{% endif %}"></i>
+                                    </div>
+                                    <div class="anomaly-details">
+                                        <div class="anomaly-title">{{ alert.title }}</div>
+                                        <div class="anomaly-description">{{ alert.description }}</div>
+                                        <div class="anomaly-time">{{ alert.created_at|date:"M d, H:i" }}</div>
+                                    </div>
+                                    <div class="anomaly-severity {{ alert.severity|lower }}">{{ alert.severity }}</div>
                                 </div>
-                                <div class="anomaly-details">
-                                    <div class="anomaly-title">Unusual Transaction Time</div>
-                                    <div class="anomaly-description">Transaction received outside business hours</div>
-                                    <div class="anomaly-time">Yesterday, 11:30 PM</div>
+                                {% endfor %}
+                            {% else %}
+                                <div class="no-alerts">
+                                    <i class="fas fa-shield-alt"></i>
+                                    <p>No active alerts. All transactions are normal.</p>
                                 </div>
-                                <div class="anomaly-severity low">Low</div>
-                            </div>
-                            
-                            <div class="anomaly-item medium">
-                                <div class="anomaly-icon">
-                                    <i class="fas fa-exclamation-triangle"></i>
-                                </div>
-                                <div class="anomaly-details">
-                                    <div class="anomaly-title">Large Transaction Alert</div>
-                                    <div class="anomaly-description">Transaction amount exceeds daily average by 150%</div>
-                                    <div class="anomaly-time">2 days ago, 2:15 PM</div>
-                                </div>
-                                <div class="anomaly-severity medium">Medium</div>
-                            </div>
-                            
-                            <div class="anomaly-item resolved">
-                                <div class="anomaly-icon">
-                                    <i class="fas fa-check"></i>
-                                </div>
-                                <div class="anomaly-details">
-                                    <div class="anomaly-title">Duplicate Transaction Prevented</div>
-                                    <div class="anomaly-description">System blocked potential duplicate payment</div>
-                                    <div class="anomaly-time">3 days ago, 9:45 AM</div>
-                                </div>
-                                <div class="anomaly-severity resolved">Resolved</div>
-                            </div>
+                            {% endif %}
                         </div>
                         
                         <div class="anomaly-summary">
                             <div class="summary-stats">
                                 <div class="stat-item">
-                                    <div class="stat-value">0</div>
+                                    <div class="stat-value">{{ alert_stats.high }}</div>
                                     <div class="stat-label">High Risk</div>
                                 </div>
                                 <div class="stat-item">
-                                    <div class="stat-value">1</div>
+                                    <div class="stat-value">{{ alert_stats.medium }}</div>
                                     <div class="stat-label">Medium Risk</div>
                                 </div>
                                 <div class="stat-item">
-                                    <div class="stat-value">1</div>
+                                    <div class="stat-value">{{ alert_stats.low }}</div>
                                     <div class="stat-label">Low Risk</div>
                                 </div>
                                 <div class="stat-item">
-                                    <div class="stat-value">15</div>
+                                    <div class="stat-value">{{ alert_stats.resolved }}</div>
                                     <div class="stat-label">Resolved</div>
                                 </div>
                             </div>

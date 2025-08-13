@@ -439,22 +439,123 @@ def api_financial_data(request):
     return JsonResponse(chart_data)
 
 @login_required
+def api_transactions(request):
+    """API endpoint for real-time transaction data"""
+    from .models import Transaction, Account, AnomalyAlert
+    
+    # Get recent transactions
+    transactions = Transaction.objects.all().order_by('-timestamp')[:20]
+    
+    # Get account balance
+    try:
+        account = Account.objects.get(account_name="TechCorp Solutions")
+        balance = float(account.balance)
+    except Account.DoesNotExist:
+        balance = 0
+    
+    # Get recent alerts
+    alerts = AnomalyAlert.objects.filter(status='ACTIVE').order_by('-created_at')[:5]
+    
+    transaction_data = []
+    for transaction in transactions:
+        transaction_data.append({
+            'id': transaction.transaction_id,
+            'timestamp': transaction.timestamp.strftime('%Y-%m-%d %H:%M:%S'),
+            'amount': float(transaction.amount),
+            'sender': transaction.sender,
+            'receiver': transaction.receiver,
+            'balance': float(transaction.balance),
+            'is_anomaly': transaction.is_anomaly,
+            'anomaly_score': transaction.anomaly_score,
+            'time_ago': get_time_ago(transaction.timestamp)
+        })
+    
+    alert_data = []
+    for alert in alerts:
+        alert_data.append({
+            'id': alert.id,
+            'type': alert.alert_type,
+            'severity': alert.severity,
+            'title': alert.title,
+            'description': alert.description,
+            'created_at': alert.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+            'time_ago': get_time_ago(alert.created_at)
+        })
+    
+    return JsonResponse({
+        'transactions': transaction_data,
+        'alerts': alert_data,
+        'account_balance': balance,
+        'total_transactions': Transaction.objects.count(),
+        'anomaly_count': Transaction.objects.filter(is_anomaly=True).count()
+    })
+
+def get_time_ago(timestamp):
+    """Helper function to get time ago string"""
+    from django.utils import timezone
+    now = timezone.now()
+    diff = now - timestamp
+    
+    if diff.days > 0:
+        return f"{diff.days} day{'s' if diff.days != 1 else ''} ago"
+    elif diff.seconds > 3600:
+        hours = diff.seconds // 3600
+        return f"{hours} hour{'s' if hours != 1 else ''} ago"
+    elif diff.seconds > 60:
+        minutes = diff.seconds // 60
+        return f"{minutes} minute{'s' if minutes != 1 else ''} ago"
+    else:
+        return "Just now"
+
+@login_required
 def transaction(request):
     """Transaction management page with live transactions and anomaly detection"""
-    company = Company.objects.first()
+    from .models import Transaction, Account, AnomalyAlert
     
-    if not company:
-        return render(request, 'transaction.html', {'error': 'No company data found.'})
+    # Get TechCorp account
+    try:
+        account = Account.objects.get(account_name="TechCorp Solutions")
+    except Account.DoesNotExist:
+        # Create account if it doesn't exist
+        account = Account.objects.create(
+            account_name="TechCorp Solutions",
+            balance=5000000,  # 50 lakhs
+            account_type="Current Account",
+            account_number="1234567890"
+        )
     
-    # Get recent transaction data for simulation
-    recent_data = DailyFinancialData.objects.filter(company=company).order_by('-date')[:10]
+    # Get recent transactions
+    recent_transactions = Transaction.objects.all().order_by('-timestamp')[:10]
+    
+    # Get recent anomaly alerts
+    recent_alerts = AnomalyAlert.objects.filter(status='ACTIVE').order_by('-created_at')[:5]
+    
+    # Calculate anomaly statistics
+    total_transactions = Transaction.objects.count()
+    anomaly_count = Transaction.objects.filter(is_anomaly=True).count()
+    anomaly_percentage = (anomaly_count / total_transactions * 100) if total_transactions > 0 else 0
+    
+    # Get alert statistics
+    alert_stats = {
+        'high': AnomalyAlert.objects.filter(severity='HIGH', status='ACTIVE').count(),
+        'medium': AnomalyAlert.objects.filter(severity='MEDIUM', status='ACTIVE').count(),
+        'low': AnomalyAlert.objects.filter(severity='LOW', status='ACTIVE').count(),
+        'resolved': AnomalyAlert.objects.filter(status='RESOLVED').count(),
+    }
     
     context = {
-        'company': company,
-        'recent_transactions': recent_data,
-        'account_name': 'TechCorp Solutions',
-        'account_number': '1234567890',
-        'account_type': 'Current Account'
+        'account': account,
+        'recent_transactions': recent_transactions,
+        'recent_alerts': recent_alerts,
+        'anomaly_stats': {
+            'total': total_transactions,
+            'anomalies': anomaly_count,
+            'percentage': round(anomaly_percentage, 1)
+        },
+        'alert_stats': alert_stats,
+        'account_name': account.account_name,
+        'account_number': account.account_number,
+        'account_type': account.account_type
     }
     
     return render(request, 'transaction.html', context)

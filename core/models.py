@@ -12,6 +12,92 @@ from decimal import Decimal
 #     def __str__(self):
 #         return self.username
 
+class Transaction(models.Model):
+    """Transaction model for storing transaction data from Auto_Transaction.py"""
+    transaction_id = models.CharField(max_length=100, primary_key=True)
+    timestamp = models.DateTimeField()
+    amount = models.DecimalField(max_digits=15, decimal_places=2)
+    sender = models.CharField(max_length=200)
+    receiver = models.CharField(max_length=200)
+    balance = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+    is_anomaly = models.BooleanField(default=False)
+    anomaly_score = models.FloatField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['-timestamp']
+        indexes = [
+            models.Index(fields=['timestamp']),
+            models.Index(fields=['sender']),
+            models.Index(fields=['receiver']),
+            models.Index(fields=['is_anomaly']),
+        ]
+    
+    def __str__(self):
+        return f"{self.transaction_id} - {self.sender} → {self.receiver}"
+
+class Account(models.Model):
+    """Account model for storing account balances"""
+    account_name = models.CharField(max_length=200, primary_key=True)
+    balance = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+    account_type = models.CharField(max_length=50, default='Current Account')
+    account_number = models.CharField(max_length=50, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return f"{self.account_name} - ₹{self.balance:,.2f}"
+
+class BalanceHistory(models.Model):
+    """Balance history model for tracking balance changes"""
+    transaction = models.ForeignKey(Transaction, on_delete=models.CASCADE, related_name='balance_changes')
+    timestamp = models.DateTimeField()
+    change_amount = models.DecimalField(max_digits=15, decimal_places=2)
+    new_balance = models.DecimalField(max_digits=15, decimal_places=2)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['-timestamp']
+        verbose_name_plural = 'Balance Histories'
+    
+    def __str__(self):
+        return f"Balance change: ₹{self.change_amount:,.2f} → ₹{self.new_balance:,.2f}"
+
+class AnomalyAlert(models.Model):
+    """Anomaly alerts for transaction monitoring"""
+    SEVERITY_CHOICES = [
+        ('LOW', 'Low'),
+        ('MEDIUM', 'Medium'),
+        ('HIGH', 'High'),
+        ('CRITICAL', 'Critical'),
+    ]
+    
+    STATUS_CHOICES = [
+        ('ACTIVE', 'Active'),
+        ('RESOLVED', 'Resolved'),
+        ('IGNORED', 'Ignored'),
+    ]
+    
+    transaction = models.ForeignKey(Transaction, on_delete=models.CASCADE, related_name='alerts')
+    alert_type = models.CharField(max_length=100)
+    severity = models.CharField(max_length=20, choices=SEVERITY_CHOICES, default='MEDIUM')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='ACTIVE')
+    title = models.CharField(max_length=200)
+    description = models.TextField()
+    anomaly_score = models.FloatField()
+    threshold_value = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True)
+    current_value = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True)
+    resolved_at = models.DateTimeField(null=True, blank=True)
+    resolved_by = models.ForeignKey('auth.User', on_delete=models.SET_NULL, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"{self.alert_type} - {self.severity} - {self.status}"
+
 class Company(models.Model):
     """Company model for storing company information"""
     name = models.CharField(max_length=200)

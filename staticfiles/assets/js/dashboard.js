@@ -7,6 +7,8 @@ document.addEventListener('DOMContentLoaded', function() {
     initLiveClock();
     initNotifications();
     
+    // No need for formatCurrencyValues since template handles it now
+    
     // Theme Management (Same as login/index pages)
     function initTheme() {
         const themeCheckbox = document.getElementById('theme-checkbox');
@@ -103,13 +105,43 @@ document.addEventListener('DOMContentLoaded', function() {
         if (chartCanvas) {
             const ctx = chartCanvas.getContext('2d');
             
+            // Get dynamic data from Django template
+            let chartData = [];
+            let chartLabels = [];
+            
+            // Check if trend_data is available from Django
+            if (typeof trendData !== 'undefined' && trendData) {
+                try {
+                    const data = JSON.parse(trendData);
+                    chartData = data.map(item => item.revenue);
+                    // Add "25" to month labels in frontend
+                    chartLabels = data.map(item => {
+                        const month = item.month;
+                        if (month === 'Jan' || month === 'Feb' || month === 'Mar') {
+                            return month + ' 26'; // For 2026 months
+                        } else {
+                            return month + ' 25'; // For 2025 months
+                        }
+                    });
+                } catch (e) {
+                    console.error('Error parsing trend data:', e);
+                    // Fallback to static data if parsing fails
+                    chartData = [650000, 720000, 680000, 750000, 820000, 790000, 850000, 847392];
+                    chartLabels = ['Jan 25', 'Feb 25', 'Mar 25', 'Apr 25', 'May 25', 'Jun 25', 'Jul 25', 'Aug 25'];
+                }
+            } else {
+                // Fallback to static data if no Django data
+                chartData = [650000, 720000, 680000, 750000, 820000, 790000, 850000, 847392];
+                chartLabels = ['Jan 25', 'Feb 25', 'Mar 25', 'Apr 25', 'May 25', 'Jun 25', 'Jul 25', 'Aug 25'];
+            }
+            
             new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
+                    labels: chartLabels,
                     datasets: [{
-                        label: 'Revenue',
-                        data: [650000, 720000, 680000, 750000, 820000, 790000, 850000, 847392],
+                        label: 'Monthly Revenue (FY 2025-26)',
+                        data: chartData,
                         borderColor: getComputedStyle(document.documentElement).getPropertyValue('--accent-color').trim(),
                         backgroundColor: 'rgba(66, 153, 225, 0.1)',
                         borderWidth: 3,
@@ -128,6 +160,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     plugins: {
                         legend: {
                             display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return 'Monthly Revenue: ₹' + context.parsed.y.toLocaleString('en-IN');
+                                }
+                            }
                         }
                     },
                     scales: {
@@ -148,7 +187,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             ticks: {
                                 color: getComputedStyle(document.documentElement).getPropertyValue('--text-secondary').trim(),
                                 callback: function(value) {
-                                    return '$' + value.toLocaleString();
+                                    return '₹' + value.toLocaleString('en-IN');
                                 }
                             }
                         }
@@ -311,11 +350,11 @@ document.addEventListener('DOMContentLoaded', function() {
         metricValues.forEach((element, index) => {
             const finalValue = element.textContent;
             const isPercentage = finalValue.includes('%');
-            const isDollar = finalValue.includes('$');
+            const isRupee = finalValue.includes('₹');
             
             let numericValue;
-            if (isDollar) {
-                numericValue = parseFloat(finalValue.replace(/[$,]/g, ''));
+            if (isRupee) {
+                numericValue = parseFloat(finalValue.replace(/[₹,]/g, ''));
             } else {
                 numericValue = parseFloat(finalValue.replace(/[^0-9.]/g, ''));
             }
@@ -329,8 +368,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     clearInterval(timer);
                 }
                 
-                if (isDollar) {
-                    element.textContent = '$' + Math.floor(currentValue).toLocaleString();
+                if (isRupee) {
+                    element.textContent = '₹' + Math.floor(currentValue).toLocaleString('en-IN');
                 } else if (isPercentage) {
                     element.textContent = currentValue.toFixed(1) + '%';
                 } else {

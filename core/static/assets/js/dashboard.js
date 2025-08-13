@@ -7,116 +7,7 @@ document.addEventListener('DOMContentLoaded', function() {
     initLiveClock();
     initNotifications();
     
-    // Format currency values with single delay to prevent interference
-    setTimeout(formatCurrencyValues, 500);
-    
-    // Format currency values with multiple delays to ensure DOM is ready
-    function formatCurrencyValues() {
-        // Format specific metric values by ID
-        const totalExpenses = document.getElementById('total-expenses');
-        const totalRevenue = document.getElementById('total-revenue');
-        const totalProfit = document.getElementById('total-profit');
-        const profitMargin = document.getElementById('profit-margin');
-        
-        // Format total expenses
-        if (totalExpenses) {
-            let text = totalExpenses.textContent;
-            // Ensure rupee symbol is present
-            if (!text.includes('₹')) {
-                text = '₹' + text.replace(/[^\d]/g, '');
-            }
-            if (text.includes('₹') && text.match(/\d+/)) {
-                const numberMatch = text.match(/₹(\d+)/);
-                if (numberMatch) {
-                    const number = parseInt(numberMatch[1]);
-                    const formattedNumber = number.toLocaleString('en-IN');
-                    totalExpenses.textContent = `₹${formattedNumber}`;
-                }
-            }
-        }
-        
-        // Format total revenue
-        if (totalRevenue) {
-            let text = totalRevenue.textContent;
-            // Ensure rupee symbol is present
-            if (!text.includes('₹')) {
-                text = '₹' + text.replace(/[^\d]/g, '');
-            }
-            if (text.includes('₹') && text.match(/\d+/)) {
-                const numberMatch = text.match(/₹(\d+)/);
-                if (numberMatch) {
-                    const number = parseInt(numberMatch[1]);
-                    const formattedNumber = number.toLocaleString('en-IN');
-                    totalRevenue.textContent = `₹${formattedNumber}`;
-                }
-            }
-        }
-        
-        // Format total profit
-        if (totalProfit) {
-            let text = totalProfit.textContent;
-            // Ensure rupee symbol is present
-            if (!text.includes('₹')) {
-                text = '₹' + text.replace(/[^\d]/g, '');
-            }
-            if (text.includes('₹') && text.match(/\d+/)) {
-                const numberMatch = text.match(/₹(\d+)/);
-                if (numberMatch) {
-                    const number = parseInt(numberMatch[1]);
-                    const formattedNumber = number.toLocaleString('en-IN');
-                    totalProfit.textContent = `₹${formattedNumber}`;
-                }
-            }
-        }
-        
-        // Format summary values
-        const summaryValues = document.querySelectorAll('.summary-value');
-        summaryValues.forEach(element => {
-            let text = element.textContent;
-            
-            // Add rupee symbol if missing
-            if (!text.includes('₹') && text.match(/\d+/)) {
-                text = '₹' + text.replace(/[^\d]/g, '');
-            }
-            
-            // Format with commas
-            if (text.includes('₹') && text.match(/\d+/)) {
-                const numberMatch = text.match(/₹(\d+)/);
-                if (numberMatch) {
-                    const number = parseInt(numberMatch[1]);
-                    const formattedNumber = number.toLocaleString('en-IN');
-                    element.textContent = `₹${formattedNumber}`;
-                }
-            }
-        });
-        
-        // Format table cells - EXCLUDE DATE COLUMN
-        const tableRows = document.querySelectorAll('.table-row');
-        tableRows.forEach(row => {
-            const cells = row.querySelectorAll('.table-cell');
-            cells.forEach((cell, index) => {
-                // Skip the first cell (date column)
-                if (index === 0) return;
-                
-                let text = cell.textContent;
-                
-                // Add rupee symbol if missing
-                if (!text.includes('₹') && text.match(/\d+/)) {
-                    text = '₹' + text.replace(/[^\d]/g, '');
-                }
-                
-                // Format with commas
-                if (text.includes('₹') && text.match(/\d+/)) {
-                    const numberMatch = text.match(/₹(\d+)/);
-                    if (numberMatch) {
-                        const number = parseInt(numberMatch[1]);
-                        const formattedNumber = number.toLocaleString('en-IN');
-                        cell.textContent = `₹${formattedNumber}`;
-                    }
-                }
-            });
-        });
-    }
+    // No need for formatCurrencyValues since template handles it now
     
     // Theme Management (Same as login/index pages)
     function initTheme() {
@@ -459,11 +350,11 @@ document.addEventListener('DOMContentLoaded', function() {
         metricValues.forEach((element, index) => {
             const finalValue = element.textContent;
             const isPercentage = finalValue.includes('%');
-            const isDollar = finalValue.includes('$');
+            const isRupee = finalValue.includes('₹');
             
             let numericValue;
-            if (isDollar) {
-                numericValue = parseFloat(finalValue.replace(/[$,]/g, ''));
+            if (isRupee) {
+                numericValue = parseFloat(finalValue.replace(/[₹,]/g, ''));
             } else {
                 numericValue = parseFloat(finalValue.replace(/[^0-9.]/g, ''));
             }
@@ -477,8 +368,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     clearInterval(timer);
                 }
                 
-                if (isDollar) {
-                    element.textContent = '$' + Math.floor(currentValue).toLocaleString();
+                if (isRupee) {
+                    element.textContent = '₹' + Math.floor(currentValue).toLocaleString('en-IN');
                 } else if (isPercentage) {
                     element.textContent = currentValue.toFixed(1) + '%';
                 } else {

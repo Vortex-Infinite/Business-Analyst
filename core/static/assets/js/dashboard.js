@@ -6,8 +6,57 @@ document.addEventListener('DOMContentLoaded', function() {
     initCharts();
     initLiveClock();
     initNotifications();
+    initScrollEffects();
     
     // No need for formatCurrencyValues since template handles it now
+    
+    // Initialize scroll effects for dynamic sidebar
+    function initScrollEffects() {
+        const mainWrapper = document.querySelector('.main-wrapper');
+        const sidebar = document.querySelector('.sidebar');
+        const header = document.querySelector('.dashboard-header');
+        
+        if (mainWrapper) {
+            let scrollTimeout;
+            
+            mainWrapper.addEventListener('scroll', function() {
+                const scrollTop = this.scrollTop;
+                
+                // Add scrolled class for enhanced shadow
+                if (scrollTop > 10) {
+                    sidebar?.classList.add('scrolled');
+                    header?.classList.add('scrolled');
+                } else {
+                    sidebar?.classList.remove('scrolled');
+                    header?.classList.remove('scrolled');
+                }
+                
+                // Clear existing timeout
+                clearTimeout(scrollTimeout);
+                
+                // Add scrolling class for animations
+                document.body.classList.add('scrolling');
+                
+                // Remove scrolling class after scroll ends
+                scrollTimeout = setTimeout(() => {
+                    document.body.classList.remove('scrolling');
+                }, 150);
+            });
+        }
+        
+        // Also handle window scroll for fallback
+        window.addEventListener('scroll', function() {
+            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+            
+            if (scrollTop > 10) {
+                sidebar?.classList.add('scrolled');
+                header?.classList.add('scrolled');
+            } else {
+                sidebar?.classList.remove('scrolled');
+                header?.classList.remove('scrolled');
+            }
+        });
+    }
     
     // Theme Management (Same as login/index pages)
     function initTheme() {
@@ -44,6 +93,17 @@ document.addEventListener('DOMContentLoaded', function() {
         if (sidebarToggle && sidebar) {
             sidebarToggle.addEventListener('click', function() {
                 sidebar.classList.toggle('collapsed');
+                
+                // Update toggle button icon direction
+                const icon = sidebarToggle.querySelector('i');
+                if (sidebar.classList.contains('collapsed')) {
+                    icon.classList.remove('fa-chevron-left');
+                    icon.classList.add('fa-chevron-right');
+                } else {
+                    icon.classList.remove('fa-chevron-right');
+                    icon.classList.add('fa-chevron-left');
+                }
+                
                 localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
             });
         }
@@ -51,19 +111,38 @@ document.addEventListener('DOMContentLoaded', function() {
         // Restore sidebar state
         if (localStorage.getItem('sidebarCollapsed') === 'true') {
             sidebar?.classList.add('collapsed');
+            // Also update the icon for restored state
+            const icon = sidebarToggle?.querySelector('i');
+            if (icon) {
+                icon.classList.remove('fa-chevron-left');
+                icon.classList.add('fa-chevron-right');
+            }
         }
         
         // Navigation items
         const navItems = document.querySelectorAll('.nav-item');
         navItems.forEach(item => {
             item.addEventListener('click', function(e) {
-                e.preventDefault();
-                navItems.forEach(nav => nav.classList.remove('active'));
-                this.classList.add('active');
-                
-                // Handle page navigation
-                const page = this.dataset.page;
-                handlePageNavigation(page);
+                // Only prevent default for items without href or with href="#"
+                if (!this.href || this.href.endsWith('#')) {
+                    e.preventDefault();
+                    navItems.forEach(nav => nav.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // Handle page navigation
+                    const page = this.dataset.page;
+                    handlePageNavigation(page);
+                } else {
+                    // For items with real URLs, add a loading transition
+                    navItems.forEach(nav => nav.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // Add a brief transition effect
+                    this.style.transform = 'scale(0.95)';
+                    setTimeout(() => {
+                        this.style.transform = 'translateX(6px)';
+                    }, 150);
+                }
             });
         });
     }
@@ -241,10 +320,10 @@ document.addEventListener('DOMContentLoaded', function() {
         const actions = {
             'dashboard': () => console.log('Dashboard selected'),
             'analytics': () => showNotification('Analytics page - Coming soon!', 'info'),
-            'reports': () => showNotification('Reports page - Coming soon!', 'info'),
-            'projects': () => showNotification('Projects page - Coming soon!', 'info'),
+            'transaction': () => window.location.href = '/transaction/',
             'finance': () => showNotification('Finance page - Coming soon!', 'info'),
-            'clients': () => showNotification('Clients page - Coming soon!', 'info'),
+            'expenses': () => showNotification('Expenses page - Coming soon!', 'info'),
+            'income': () => showNotification('Income Tracking page - Coming soon!', 'info'),
             'performance': () => showNotification('Performance page - Coming soon!', 'info'),
             'documents': () => window.location.href = '/document/',
             'settings': () => showNotification('Settings page - Coming soon!', 'info')

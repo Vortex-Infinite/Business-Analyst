@@ -439,6 +439,27 @@ def api_financial_data(request):
     return JsonResponse(chart_data)
 
 @login_required
+def transaction(request):
+    """Transaction management page with live transactions and anomaly detection"""
+    company = Company.objects.first()
+    
+    if not company:
+        return render(request, 'transaction.html', {'error': 'No company data found.'})
+    
+    # Get recent transaction data for simulation
+    recent_data = DailyFinancialData.objects.filter(company=company).order_by('-date')[:10]
+    
+    context = {
+        'company': company,
+        'recent_transactions': recent_data,
+        'account_name': 'TechCorp Solutions',
+        'account_number': '1234567890',
+        'account_type': 'Current Account'
+    }
+    
+    return render(request, 'transaction.html', context)
+
+@login_required
 def analytics(request):
     """Comprehensive analytics page with dropdown options for viewing past 5 years data"""
     company = Company.objects.first()

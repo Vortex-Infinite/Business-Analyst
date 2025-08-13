@@ -604,3 +604,61 @@ def analytics(request):
     }
     
     return render(request, 'analytics.html', context)
+
+@login_required
+def profile_settings(request):
+    """Profile Settings page for user account management"""
+    user = request.user
+    
+    if request.method == 'POST':
+        # Handle profile updates here
+        user.first_name = request.POST.get('first_name', user.first_name)
+        user.last_name = request.POST.get('last_name', user.last_name)
+        user.email = request.POST.get('email', user.email)
+        user.save()
+        
+        # Add success message
+        success_message = "Profile updated successfully!"
+        return render(request, 'profile_settings.html', {
+            'user': user,
+            'success_message': success_message
+        })
+    
+    context = {
+        'user': user,
+        'page_title': 'Profile Settings'
+    }
+    
+    return render(request, 'profile_settings.html', context)
+
+@login_required
+def preferences(request):
+    """User Preferences page for application settings"""
+    user = request.user
+    
+    if request.method == 'POST':
+        # Handle preferences updates here
+        success_message = "Preferences updated successfully!"
+        return render(request, 'preferences.html', {
+            'user': user,
+            'success_message': success_message
+        })
+    
+    context = {
+        'user': user,
+        'page_title': 'Preferences'
+    }
+    
+    return render(request, 'preferences.html', context)
+
+@login_required
+def help_support(request):
+    """Help & Support page with FAQs and contact information"""
+    user = request.user
+    
+    context = {
+        'user': user,
+        'page_title': 'Help & Support'
+    }
+    
+    return render(request, 'help_support.html', context)

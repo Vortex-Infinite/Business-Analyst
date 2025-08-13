@@ -1,151 +1,1048 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <title>My Documents</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="stylesheet" href="../static/assets/css/dashboard.css">
-    <link rel="stylesheet" href="../static/assets/css/dashboard_style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ORBIS - Documents</title>
+    <link rel="stylesheet" href="{% static 'assets/css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/css/dashboard_style.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .documents-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .documents-header {
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--border-color);
+        }
+        
+        .documents-header h1 {
+            color: var(--text-primary);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 2rem;
+        }
+        
+        .documents-subheader {
+            color: var(--text-secondary);
+            margin-top: 0.5rem;
+            font-size: 1.1rem;
+        }
+        
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            background: linear-gradient(135deg, var(--primary-color), #5a7cfa);
+            color: white;
+            text-decoration: none;
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(64, 123, 255, 0.2);
+        }
+        
+        .back-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(64, 123, 255, 0.3);
+            color: white;
+            text-decoration: none;
+        }
+        
+        .documents-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            gap: 1rem;
+        }
+        
+        .search-controls {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex: 1;
+        }
+        
+        .search-input {
+            flex: 1;
+            max-width: 400px;
+            padding: 0.75rem 1rem;
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+        }
+        
+        .search-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(64, 123, 255, 0.1);
+        }
+        
+        .filter-select {
+            padding: 0.75rem 1rem;
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+            min-width: 150px;
+        }
+        
+        .upload-btn {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .upload-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(40, 167, 69, 0.3);
+        }
+        
+        .documents-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .document-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .document-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+        
+        .document-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+            color: white;
+        }
+        
+        .document-icon.pdf { background: #dc3545; }
+        .document-icon.word { background: #007bff; }
+        .document-icon.excel { background: #28a745; }
+        .document-icon.image { background: #6f42c1; }
+        .document-icon.default { background: var(--text-secondary); }
+        
+        .document-info h3 {
+            color: var(--text-primary);
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin: 0 0 0.5rem 0;
+            line-height: 1.3;
+        }
+        
+        .document-meta {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+        
+        .document-meta span {
+            display: block;
+            margin-bottom: 0.25rem;
+        }
+        
+        .document-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .action-btn {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            padding: 0.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.25rem;
+            font-size: 0.8rem;
+        }
+        
+        .action-btn:hover {
+            background: var(--hover-bg);
+            color: var(--text-primary);
+            border-color: var(--primary-color);
+        }
+        
+        .action-btn.primary {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+        
+        .action-btn.primary:hover {
+            background: #5a7cfa;
+        }
+        
+        .documents-table {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border-color);
+            margin-bottom: 2rem;
+        }
+        
+        .table-header {
+            display: flex;
+            align-items: center;
+            justify-content: between;
+            margin-bottom: 1.5rem;
+        }
+        
+        .table-title {
+            color: var(--text-primary);
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .data-table th,
+        .data-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .data-table th {
+            background: var(--table-header-bg);
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+        }
+        
+        .data-table tr:hover {
+            background: var(--hover-bg);
+        }
+        
+        .data-table td {
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+        
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        
+        .status-badge.success {
+            background: #28a745;
+            color: white;
+        }
+        
+        .status-badge.pending {
+            background: #ffc107;
+            color: #212529;
+        }
+        
+        .status-badge.error {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 3rem 2rem;
+            color: var(--text-secondary);
+        }
+        
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+        
+        .empty-state h3 {
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+        
+        .upload-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 2rem;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            position: relative;
+        }
+        
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+        }
+        
+        .modal-title {
+            color: var(--text-primary);
+            font-size: 1.3rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .close-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 6px;
+        }
+        
+        .close-btn:hover {
+            background: var(--hover-bg);
+            color: var(--text-primary);
+        }
+        
+        .drop-zone {
+            border: 2px dashed var(--border-color);
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+            color: var(--text-secondary);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .drop-zone:hover,
+        .drop-zone.dragover {
+            border-color: var(--primary-color);
+            background: rgba(64, 123, 255, 0.05);
+        }
+        
+        .drop-zone i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+        
+        .file-input {
+            display: none;
+        }
+        
+        .modal-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+        
+        .btn-secondary {
+            background: transparent;
+            color: var(--text-secondary);
+            border: 1px solid var(--border-color);
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            flex: 1;
+        }
+        
+        .btn-secondary:hover {
+            background: var(--hover-bg);
+            color: var(--text-primary);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color), #5a7cfa);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            flex: 1;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(64, 123, 255, 0.3);
+        }
+        
+        @media (max-width: 768px) {
+            .documents-container {
+                padding: 1rem;
+            }
+            
+            .documents-actions {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .search-controls {
+                flex-direction: column;
+            }
+            
+            .documents-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 </head>
-<body>
-  <div class="dashboard-container">
-    <!-- Sidebar removed -->
-    <div class="dashboard-main" style="display:flex;justify-content:center;align-items:flex-start;height:100vh;background:#f8fafd;width:100%;">
-      <div class="doc-card" style="background:#fff;box-shadow:0 8px 32px rgba(39,68,114,.09);border-radius:18px;padding:32px 32px 70px;max-width:900px;width:900px;margin-top:56px;">
-  <div class="doc-title" style="font-size:1.7rem;font-weight:700;color:#000;margin:8px 0 14px;display:flex;gap:10px;align-items:center"><i class="fa fa-folder"></i> My Documents</div>
-        <div class="table-wrap" style="border:1px solid #e0e6ed;border-radius:12px;overflow:hidden;margin-bottom:24px;">
-          <div class="scroll-area">
-            <table style="width:100%;border-collapse:separate;border-spacing:0;">
-              <thead>
-                <tr style="background:#f2f5fb;color:#000;">
-                  <th style="color:#000;padding:12px 0;text-align:center;vertical-align:middle;width:38%;">Document Name</th>
-                  <th style="color:#000;padding:12px 0;text-align:center;vertical-align:middle;width:12%;">Type</th>
-                  <th style="color:#000;padding:12px 0;text-align:center;vertical-align:middle;width:18%;">Date Uploaded</th>
-                  <th style="color:#000;padding:12px 0;text-align:center;vertical-align:middle;width:18%;">Status</th>
-                  <th style="color:#000;padding:12px 0;text-align:center;vertical-align:middle;width:14%;">Action</th>
-                </tr>
-              </thead>
-              <tbody id="docBody" style="text-align:center;">
-                <!-- Starts empty. Rows will be added after successful upload -->
-              </tbody>
-            </table>
-            <div id="emptyState" class="empty" style="text-align:center;color:#5a6b86;padding:28px 10px;font-weight:600">
-              <i class="fa fa-folder-open"></i>No documents available. Upload to see files here.
+<body class="dashboard-page dark-mode">
+    <!-- Enhanced Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo-container">
+                <div class="logo-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <div class="sidebar-logo">ORBIS</div>
             </div>
-          </div>
         </div>
-        <button class="upload-inside" id="openUpload" style="background:#009ffd;color:#fff;border:none;border-radius:10px;padding:10px 18px;font-weight:700;cursor:pointer;box-shadow:0 8px 18px rgba(0,159,253,.25);transition:background .2s, transform .05s;float:right;"><i class="fa fa-upload"></i> Upload</button>
-      </div>
-      <!-- Upload modal overlay -->
-      <div class="modal-bg" id="modalBg2" style="display:none;align-items:center;justify-content:center;background:rgba(10,24,55,.23);z-index:99;position:fixed;inset:0;">
-        <div class="modal" style="background:#fff;border-radius:14px;box-shadow:0 8px 32px rgba(39,68,114,.13);padding:32px;width:420px;max-width:95vw;position:relative;">
-          <button class="close-btn" id="closeModal2" title="Close" style="position:absolute;top:14px;right:16px;background:none;border:none;font-size:1.1rem;color:#009ffd;cursor:pointer"><i class="fa fa-times"></i></button>
-          <div class="modal-title" style="font-weight:700;color:#000;margin-bottom:14px;display:flex;gap:8px;align-items:center"><i class="fa fa-upload"></i> Upload Document</div>
-          <div class="row" style="display:flex;align-items:center;gap:10px;margin:8px 0">
-            <span class="label" style="color:#274472;font-weight:600;min-width:170px">Select a document:</span>
-          </div>
-          <div id="dropZone2" class="drop" style="border:2px dashed #009ffd;background:#f3faff;border-radius:10px;min-height:90px;padding:14px;text-align:center;color:#274472;font-weight:500;margin-top:8px;position:relative;">
-            <i class="fa fa-cloud-upload-alt"></i> Drag & drop your file here
-            <div style="display:flex;justify-content:space-between;align-items:center;position:absolute;left:0;right:0;bottom:-54px;width:100%;padding:0 8px;">
-              <div>
-                <button id="chooseBtn2" class="choose-btn" style="background:#ecf4fa;color:#274472;border:none;border-radius:8px;padding:10px 14px;font-weight:600;cursor:pointer"><i class="fa fa-folder-open"></i> Choose File</button>
-                <input id="fileInput2" class="file-input" type="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" style="display:none;" />
-              </div>
-              <button id="uploadBtn2" class="modal-btn" style="background:#009ffd;color:#fff;border:none;border-radius:8px;padding:9px 18px;font-weight:700;cursor:pointer;display:none;"><i class="fa fa-paper-plane"></i> Upload</button>
-            </div>
-          </div>
-          <div id="chosenFile2" class="chosen" style="margin-top:64px;color:#429b56;font-weight:600;word-break:break-all"></div>
-        </div>
-      </div>
-    </div>
-  </div>
-  <script>
-const openUpload = document.getElementById('openUpload');
-const modalBg2 = document.getElementById('modalBg2');
-const closeModal2 = document.getElementById('closeModal2');
-const chooseBtn2 = document.getElementById('chooseBtn2');
-const fileInput2 = document.getElementById('fileInput2');
-const dropZone2 = document.getElementById('dropZone2');
-const chosenFile2 = document.getElementById('chosenFile2');
-const uploadBtn2 = document.getElementById('uploadBtn2');
-const docBody = document.getElementById('docBody');
-const emptyState = document.getElementById('emptyState');
-let selectedFile2 = null;
-openUpload.onclick = () => {
-  modalBg2.style.display = 'flex';
-  resetModal2();
-};
-closeModal2.onclick = () => modalBg2.style.display = 'none';
-modalBg2.addEventListener('click', e => {
-  if (e.target === modalBg2) modalBg2.style.display = 'none';
-});
-chooseBtn2.onclick = () => fileInput2.click();
-fileInput2.onchange = () => {
-  if (fileInput2.files.length) setFile2(fileInput2.files[0]);
-};
-['dragenter','dragover'].forEach(ev => dropZone2.addEventListener(ev, e => {
-  e.preventDefault(); e.stopPropagation(); dropZone2.classList.add('dragover');
-}));
-['dragleave','drop'].forEach(ev => dropZone2.addEventListener(ev, e => {
-  e.preventDefault(); e.stopPropagation(); dropZone2.classList.remove('dragover');
-}));
-dropZone2.addEventListener('drop', e => {
-  const f = e.dataTransfer.files;
-  if (f && f.length) setFile2(f[0]);
-});
-function setFile2(file){
-  selectedFile2 = file;
-  chosenFile2.innerHTML = '';
-  if (file.type && file.type.startsWith('image/')) {
-    const reader = new FileReader();
-    reader.onload = function(e) {
-      chosenFile2.innerHTML = `<img src="${e.target.result}" alt="Preview" style="max-width:120px;max-height:120px;display:block;margin-bottom:8px;border-radius:8px;" /><br>${file.name}`;
-    };
-    reader.readAsDataURL(file);
-  } else {
-    chosenFile2.textContent = file.name;
-  }
-  uploadBtn2.style.display = 'inline-block';
-}
-uploadBtn2.onclick = async () => {
-  if (!selectedFile2) return;
-  addRow2(selectedFile2.name);
-  modalBg2.style.display = 'none';
-  resetModal2();
-};
-function addRow2(fileName){
-  if (emptyState) emptyState.style.display = 'none';
-  const now = new Date();
-  const dateStr = now.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}).replace(/ /g,'-');
-  const type = guessType2(fileName);
-  const tr = document.createElement('tr');
-  tr.innerHTML = ` <td style='text-align:center;'>${fileName}</td> <td style='text-align:center;'>${type}</td> <td style='text-align:left;'>${dateStr}</td> <td style='text-align:center;'><span class="status success">Available</span></td> <td class="actions" style='text-align:center;'> <button class="action-btn" title="View"><i class="fa fa-eye"></i></button> <button class="action-btn" title="Download"><i class="fa fa-download"></i></button> </td>`;
-  docBody.appendChild(tr);
-}
-function guessType2(name){
-  const ext = name.split('.').pop().toLowerCase();
-  if (["pdf"].includes(ext)) return 'PDF';
-  if (["doc","docx"].includes(ext)) return 'Word';
-  if (["jpg","jpeg","png"].includes(ext)) return 'Image';
-  return 'Document';
-}
-function resetModal2(){
-  selectedFile2 = null;
-  fileInput2.value = '';
-  chosenFile2.textContent = '';
-  uploadBtn2.style.display = 'none';
-}
 
-// Sidebar navigation: go to home page when 'Home' is clicked
-document.querySelectorAll('.sidebar-menu-item').forEach(function(btn){
-  btn.addEventListener('click',function(){
-    const menu = btn.getAttribute('data-menu');
-    if(menu === 'profile'){
-      window.location.href = 'hr_home.html';
-    }
-    // ...existing code...
-  });
-});
-</script>
+        <nav class="sidebar-nav">
+            <div class="nav-section">
+                <div class="nav-section-title">OVERVIEW</div>
+                <a href="{% url 'dashboard' %}" class="nav-item" data-page="dashboard">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="{% url 'analytics' %}" class="nav-item" data-page="analytics">
+                    <i class="fas fa-chart-pie"></i>
+                    <span>Analytics</span>
+                </a>
+                <a href="{% url 'transaction' %}" class="nav-item" data-page="transaction">
+                    <i class="fas fa-exchange-alt"></i>
+                    <span>Transaction</span>
+                </a>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-section-title">BUSINESS</div>
+                <a href="#" class="nav-item" data-page="finance">
+                    <i class="fas fa-dollar-sign"></i>
+                    <span>Finance</span>
+                </a>
+                <a href="#" class="nav-item" data-page="expenses">
+                    <i class="fas fa-receipt"></i>
+                    <span>Expenses</span>
+                </a>
+                <a href="#" class="nav-item" data-page="income">
+                    <i class="fas fa-money-bill-wave"></i>
+                    <span>Income Tracking</span>
+                </a>
+                <a href="#" class="nav-item" data-page="performance">
+                    <i class="fas fa-trophy"></i>
+                    <span>Performance</span>
+                </a>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-section-title">TOOLS</div>
+                <a href="{% url 'document' %}" class="nav-item active" data-page="documents">
+                    <i class="fas fa-folder"></i>
+                    <span>Documents</span>
+                </a>
+                <a href="#" class="nav-item" data-page="settings">
+                    <i class="fas fa-cog"></i>
+                    <span>Settings</span>
+                </a>
+            </div>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="theme-switch-container">
+                <span class="theme-label">Dark Mode</span>
+                <label class="theme-switch" for="theme-checkbox">
+                    <input type="checkbox" id="theme-checkbox">
+                    <div class="slider round">
+                        <div class="knob">
+                            <i class="fas fa-sun"></i>
+                            <i class="fas fa-moon"></i>
+                        </div>
+                    </div>
+                </label>
+            </div>
+            <button class="sidebar-toggle" id="sidebar-toggle">
+                <i class="fas fa-chevron-left"></i>
+                <span>Collapse</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Content Wrapper -->
+    <div class="main-wrapper">
+        <!-- Enhanced Header -->
+        <header class="dashboard-header">
+            <div class="header-left">
+                <div class="header-title">
+                    Document Management
+                    <span id="live-time"></span>
+                </div>
+            </div>
+            <div class="header-actions">
+                <div class="notifications">
+                    <button class="notification-btn">
+                        <i class="fas fa-bell"></i>
+                        <span class="notification-badge">3</span>
+                    </button>
+                </div>
+                <div class="profile-container">
+                    <button class="profile-btn" id="profile-btn">
+                        <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="Profile">
+                        <div class="profile-info">
+                            <div class="name">Business Analyst</div>
+                            <div class="email">analyst@orbis.com</div>
+                        </div>
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    
+                    <div class="profile-dropdown" id="profile-dropdown">
+                        <div class="dropdown-header">
+                            <div class="name">Business Analyst</div>
+                            <div class="email">analyst@orbis.com</div>
+                        </div>
+                        <div class="dropdown-section">
+                            <a href="{% url 'profile_settings' %}" class="dropdown-item">
+                                <i class="fas fa-user"></i>
+                                Profile Settings
+                            </a>
+                            <a href="{% url 'preferences' %}" class="dropdown-item">
+                                <i class="fas fa-cog"></i>
+                                Preferences
+                            </a>
+                            <a href="{% url 'help_support' %}" class="dropdown-item">
+                                <i class="fas fa-question-circle"></i>
+                                Help & Support
+                            </a>
+                        </div>
+                        <div class="dropdown-section">
+                            <button class="dropdown-item logout-btn" id="logout-btn">
+                                <i class="fas fa-sign-out-alt"></i>
+                                Sign Out
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Documents Content -->
+        <main class="main-content">
+            <div class="documents-container">
+                <a href="{% url 'dashboard' %}" class="back-button">
+                    <i class="fas fa-arrow-left"></i>
+                    Back to Dashboard
+                </a>
+                
+                <div class="documents-header">
+                    <h1>
+                        <i class="fas fa-folder-open"></i>
+                        Document Management
+                    </h1>
+                    <p class="documents-subheader">
+                        Manage, organize, and access your business documents securely
+                    </p>
+                </div>
+
+                <div class="documents-actions">
+                    <div class="search-controls">
+                        <input type="text" class="search-input" placeholder="Search documents..." id="searchInput">
+                        <select class="filter-select" id="typeFilter">
+                            <option value="">All Types</option>
+                            <option value="pdf">PDF</option>
+                            <option value="word">Word</option>
+                            <option value="excel">Excel</option>
+                            <option value="image">Image</option>
+                        </select>
+                    </div>
+                    <button class="upload-btn" id="uploadBtn">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        Upload Document
+                    </button>
+                </div>
+
+                <!-- Document Cards Grid -->
+                <div class="documents-grid" id="documentsGrid">
+                    <!-- Sample Documents -->
+                    <div class="document-card" data-type="pdf">
+                        <div class="document-icon pdf">
+                            <i class="fas fa-file-pdf"></i>
+                        </div>
+                        <div class="document-info">
+                            <h3>Financial Report Q3 2025.pdf</h3>
+                            <div class="document-meta">
+                                <span><i class="fas fa-calendar"></i> Aug 10, 2025</span>
+                                <span><i class="fas fa-hdd"></i> 2.4 MB</span>
+                                <span><i class="fas fa-user"></i> Business Analyst</span>
+                            </div>
+                        </div>
+                        <div class="document-actions">
+                            <button class="action-btn primary" title="View">
+                                <i class="fas fa-eye"></i>
+                                View
+                            </button>
+                            <button class="action-btn" title="Download">
+                                <i class="fas fa-download"></i>
+                                Download
+                            </button>
+                            <button class="action-btn" title="Share">
+                                <i class="fas fa-share"></i>
+                                Share
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="document-card" data-type="excel">
+                        <div class="document-icon excel">
+                            <i class="fas fa-file-excel"></i>
+                        </div>
+                        <div class="document-info">
+                            <h3>Budget Analysis 2025.xlsx</h3>
+                            <div class="document-meta">
+                                <span><i class="fas fa-calendar"></i> Aug 8, 2025</span>
+                                <span><i class="fas fa-hdd"></i> 1.2 MB</span>
+                                <span><i class="fas fa-user"></i> Finance Team</span>
+                            </div>
+                        </div>
+                        <div class="document-actions">
+                            <button class="action-btn primary" title="View">
+                                <i class="fas fa-eye"></i>
+                                View
+                            </button>
+                            <button class="action-btn" title="Download">
+                                <i class="fas fa-download"></i>
+                                Download
+                            </button>
+                            <button class="action-btn" title="Share">
+                                <i class="fas fa-share"></i>
+                                Share
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="document-card" data-type="word">
+                        <div class="document-icon word">
+                            <i class="fas fa-file-word"></i>
+                        </div>
+                        <div class="document-info">
+                            <h3>Business Strategy Plan.docx</h3>
+                            <div class="document-meta">
+                                <span><i class="fas fa-calendar"></i> Aug 5, 2025</span>
+                                <span><i class="fas fa-hdd"></i> 890 KB</span>
+                                <span><i class="fas fa-user"></i> Strategy Team</span>
+                            </div>
+                        </div>
+                        <div class="document-actions">
+                            <button class="action-btn primary" title="View">
+                                <i class="fas fa-eye"></i>
+                                View
+                            </button>
+                            <button class="action-btn" title="Download">
+                                <i class="fas fa-download"></i>
+                                Download
+                            </button>
+                            <button class="action-btn" title="Share">
+                                <i class="fas fa-share"></i>
+                                Share
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="document-card" data-type="pdf">
+                        <div class="document-icon pdf">
+                            <i class="fas fa-file-pdf"></i>
+                        </div>
+                        <div class="document-info">
+                            <h3>Compliance Report 2025.pdf</h3>
+                            <div class="document-meta">
+                                <span><i class="fas fa-calendar"></i> Aug 3, 2025</span>
+                                <span><i class="fas fa-hdd"></i> 3.1 MB</span>
+                                <span><i class="fas fa-user"></i> Legal Team</span>
+                            </div>
+                        </div>
+                        <div class="document-actions">
+                            <button class="action-btn primary" title="View">
+                                <i class="fas fa-eye"></i>
+                                View
+                            </button>
+                            <button class="action-btn" title="Download">
+                                <i class="fas fa-download"></i>
+                                Download
+                            </button>
+                            <button class="action-btn" title="Share">
+                                <i class="fas fa-share"></i>
+                                Share
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="document-card" data-type="image">
+                        <div class="document-icon image">
+                            <i class="fas fa-file-image"></i>
+                        </div>
+                        <div class="document-info">
+                            <h3>Company Logo Assets.png</h3>
+                            <div class="document-meta">
+                                <span><i class="fas fa-calendar"></i> Aug 1, 2025</span>
+                                <span><i class="fas fa-hdd"></i> 456 KB</span>
+                                <span><i class="fas fa-user"></i> Design Team</span>
+                            </div>
+                        </div>
+                        <div class="document-actions">
+                            <button class="action-btn primary" title="View">
+                                <i class="fas fa-eye"></i>
+                                View
+                            </button>
+                            <button class="action-btn" title="Download">
+                                <i class="fas fa-download"></i>
+                                Download
+                            </button>
+                            <button class="action-btn" title="Share">
+                                <i class="fas fa-share"></i>
+                                Share
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="document-card" data-type="excel">
+                        <div class="document-icon excel">
+                            <i class="fas fa-file-excel"></i>
+                        </div>
+                        <div class="document-info">
+                            <h3>Sales Data Q2 2025.xlsx</h3>
+                            <div class="document-meta">
+                                <span><i class="fas fa-calendar"></i> Jul 30, 2025</span>
+                                <span><i class="fas fa-hdd"></i> 2.8 MB</span>
+                                <span><i class="fas fa-user"></i> Sales Team</span>
+                            </div>
+                        </div>
+                        <div class="document-actions">
+                            <button class="action-btn primary" title="View">
+                                <i class="fas fa-eye"></i>
+                                View
+                            </button>
+                            <button class="action-btn" title="Download">
+                                <i class="fas fa-download"></i>
+                                Download
+                            </button>
+                            <button class="action-btn" title="Share">
+                                <i class="fas fa-share"></i>
+                                Share
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Documents Table -->
+                <div class="documents-table">
+                    <div class="table-header">
+                        <h3 class="table-title">
+                            <i class="fas fa-table"></i>
+                            Recent Documents
+                        </h3>
+                    </div>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Document Name</th>
+                                <th>Type</th>
+                                <th>Size</th>
+                                <th>Modified</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Financial Report Q3 2025.pdf</strong></td>
+                                <td>PDF</td>
+                                <td>2.4 MB</td>
+                                <td>Aug 10, 2025</td>
+                                <td><span class="status-badge success">Available</span></td>
+                                <td>
+                                    <button class="action-btn" title="View"><i class="fas fa-eye"></i></button>
+                                    <button class="action-btn" title="Download"><i class="fas fa-download"></i></button>
+                                    <button class="action-btn" title="Share"><i class="fas fa-share"></i></button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>Budget Analysis 2025.xlsx</strong></td>
+                                <td>Excel</td>
+                                <td>1.2 MB</td>
+                                <td>Aug 8, 2025</td>
+                                <td><span class="status-badge success">Available</span></td>
+                                <td>
+                                    <button class="action-btn" title="View"><i class="fas fa-eye"></i></button>
+                                    <button class="action-btn" title="Download"><i class="fas fa-download"></i></button>
+                                    <button class="action-btn" title="Share"><i class="fas fa-share"></i></button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>Business Strategy Plan.docx</strong></td>
+                                <td>Word</td>
+                                <td>890 KB</td>
+                                <td>Aug 5, 2025</td>
+                                <td><span class="status-badge pending">Processing</span></td>
+                                <td>
+                                    <button class="action-btn" title="View"><i class="fas fa-eye"></i></button>
+                                    <button class="action-btn" title="Download"><i class="fas fa-download"></i></button>
+                                    <button class="action-btn" title="Share"><i class="fas fa-share"></i></button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Upload Modal -->
+    <div class="upload-modal" id="uploadModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    Upload Document
+                </h3>
+                <button class="close-btn" id="closeModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="drop-zone" id="dropZone">
+                <i class="fas fa-cloud-upload-alt"></i>
+                <h4>Drag & drop your files here</h4>
+                <p>or click to browse</p>
+                <input type="file" class="file-input" id="fileInput" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png">
+            </div>
+            
+            <div id="selectedFiles"></div>
+            
+            <div class="modal-actions">
+                <button class="btn-secondary" id="cancelBtn">Cancel</button>
+                <button class="btn-primary" id="uploadConfirmBtn">
+                    <i class="fas fa-upload"></i>
+                    Upload Files
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="{% static 'assets/js/dashboard.js' %}"></script>
+    <script>
+        // Document management functionality
+        const uploadBtn = document.getElementById('uploadBtn');
+        const uploadModal = document.getElementById('uploadModal');
+        const closeModal = document.getElementById('closeModal');
+        const cancelBtn = document.getElementById('cancelBtn');
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const selectedFiles = document.getElementById('selectedFiles');
+        const uploadConfirmBtn = document.getElementById('uploadConfirmBtn');
+        const searchInput = document.getElementById('searchInput');
+        const typeFilter = document.getElementById('typeFilter');
+        const documentsGrid = document.getElementById('documentsGrid');
+
+        let filesToUpload = [];
+
+        // Modal functionality
+        uploadBtn.addEventListener('click', () => {
+            uploadModal.style.display = 'flex';
+        });
+
+        closeModal.addEventListener('click', () => {
+            uploadModal.style.display = 'none';
+            resetUpload();
+        });
+
+        cancelBtn.addEventListener('click', () => {
+            uploadModal.style.display = 'none';
+            resetUpload();
+        });
+
+        uploadModal.addEventListener('click', (e) => {
+            if (e.target === uploadModal) {
+                uploadModal.style.display = 'none';
+                resetUpload();
+            }
+        });
+
+        // Drag and drop functionality
+        dropZone.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('dragover');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            handleFiles(e.dataTransfer.files);
+        });
+
+        fileInput.addEventListener('change', () => {
+            handleFiles(fileInput.files);
+        });
+
+        function handleFiles(files) {
+            filesToUpload = Array.from(files);
+            displaySelectedFiles();
+        }
+
+        function displaySelectedFiles() {
+            selectedFiles.innerHTML = '';
+            filesToUpload.forEach((file, index) => {
+                const fileItem = document.createElement('div');
+                fileItem.style.cssText = 'display: flex; align-items: center; justify-content: space-between; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 6px; margin-top: 0.5rem;';
+                fileItem.innerHTML = `
+                    <span style="color: var(--text-primary);">${file.name} (${formatFileSize(file.size)})</span>
+                    <button onclick="removeFile(${index})" style="background: none; border: none; color: var(--text-secondary); cursor: pointer;">
+                        <i class="fas fa-times"></i>
+                    </button>
+                `;
+                selectedFiles.appendChild(fileItem);
+            });
+        }
+
+        function removeFile(index) {
+            filesToUpload.splice(index, 1);
+            displaySelectedFiles();
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        function resetUpload() {
+            filesToUpload = [];
+            fileInput.value = '';
+            selectedFiles.innerHTML = '';
+        }
+
+        uploadConfirmBtn.addEventListener('click', () => {
+            if (filesToUpload.length > 0) {
+                // Simulate upload
+                alert(`Uploading ${filesToUpload.length} file(s)...`);
+                uploadModal.style.display = 'none';
+                resetUpload();
+            }
+        });
+
+        // Search functionality
+        searchInput.addEventListener('input', filterDocuments);
+        typeFilter.addEventListener('change', filterDocuments);
+
+        function filterDocuments() {
+            const searchTerm = searchInput.value.toLowerCase();
+            const selectedType = typeFilter.value;
+            const documentCards = documentsGrid.querySelectorAll('.document-card');
+
+            documentCards.forEach(card => {
+                const title = card.querySelector('h3').textContent.toLowerCase();
+                const type = card.getAttribute('data-type');
+                
+                const matchesSearch = title.includes(searchTerm);
+                const matchesType = !selectedType || type === selectedType;
+                
+                card.style.display = matchesSearch && matchesType ? 'block' : 'none';
+            });
+        }
+
+        // Document action handlers
+        document.querySelectorAll('.action-btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const icon = this.querySelector('i');
+                if (icon.classList.contains('fa-eye')) {
+                    alert('Document viewer will be implemented soon!');
+                } else if (icon.classList.contains('fa-download')) {
+                    alert('Download functionality will be implemented soon!');
+                } else if (icon.classList.contains('fa-share')) {
+                    alert('Share functionality will be implemented soon!');
+                }
+            });
+        });
+
+        // Document card click handler
+        document.querySelectorAll('.document-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const title = this.querySelector('h3').textContent;
+                alert(`Opening ${title}...`);
+            });
+        });
+    </script>
 </body>
+</html>

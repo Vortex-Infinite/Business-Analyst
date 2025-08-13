@@ -9,6 +9,10 @@
     <link rel="stylesheet" href="{% static 'assets/css/dashboard_style.css' %}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Pass Django data to JavaScript
+        const trendData = '{{ trend_data|safe }}';
+    </script>
 </head>
 <body class="dashboard-page dark-mode">
     <!-- Enhanced Sidebar -->
@@ -162,7 +166,7 @@
                         <i class="fas fa-receipt"></i>
                     </div>
                     <div class="metric-content">
-                        <div class="metric-value">₹{{ total_expenses|floatformat:0|default:"0" }}</div>
+                        <div class="metric-value" id="total-expenses">₹{{ total_expenses|floatformat:0 }}</div>
                         <div class="metric-label">Total Expenses</div>
                         <div class="metric-change positive">
                             <i class="fas fa-arrow-up"></i>
@@ -176,7 +180,7 @@
                         <i class="fas fa-chart-line"></i>
                     </div>
                     <div class="metric-content">
-                        <div class="metric-value">₹{{ total_revenue|floatformat:0|default:"0" }}</div>
+                        <div class="metric-value" id="total-revenue">₹{{ total_revenue|floatformat:0 }}</div>
                         <div class="metric-label">Total Revenue</div>
                         <div class="metric-change positive">
                             <i class="fas fa-arrow-up"></i>
@@ -190,7 +194,7 @@
                         <i class="fas fa-money-bill-wave"></i>
                     </div>
                     <div class="metric-content">
-                        <div class="metric-value">₹{{ total_profit|floatformat:0|default:"0" }}</div>
+                        <div class="metric-value" id="total-profit">₹{{ total_profit|floatformat:0 }}</div>
                         <div class="metric-label">Total Profit</div>
                         <div class="metric-change positive">
                             <i class="fas fa-arrow-up"></i>
@@ -204,11 +208,11 @@
                         <i class="fas fa-percentage"></i>
                     </div>
                     <div class="metric-content">
-                        <div class="metric-value">{{ performance_stats.avg_profit_margin|floatformat:1|default:"0" }}%</div>
+                        <div class="metric-value" id="profit-margin">{{ performance_stats.avg_profit_margin|floatformat:1|default:"0" }}%</div>
                         <div class="metric-label">Profit Margin</div>
                         <div class="metric-change {% if performance_stats.margin_trend > 0 %}positive{% elif performance_stats.margin_trend < 0 %}negative{% else %}neutral{% endif %}">
                             <i class="fas fa-arrow-{% if performance_stats.margin_trend > 0 %}up{% elif performance_stats.margin_trend < 0 %}down{% else %}right{% endif %}"></i>
-                            Industry average: 18.2%
+                            Dynamic calculation
                         </div>
                     </div>
                 </div>
@@ -242,23 +246,23 @@
                     <div class="widget-content">
                         <div class="financial-summary">
                             <div class="summary-item">
+                                <div class="summary-label">Last Transaction Revenue ({{ last_transaction_date|date:"M d, Y" }})</div>
+                                <div class="summary-value">₹{{ last_transaction_revenue|floatformat:0 }}</div>
+                                <div class="summary-trend positive">Latest transaction</div>
+                            </div>
+                            <div class="summary-item">
+                                <div class="summary-label">Last Transaction Expenses ({{ last_transaction_date|date:"M d, Y" }})</div>
+                                <div class="summary-value">₹{{ last_transaction_expenses|floatformat:0 }}</div>
+                                <div class="summary-trend neutral">Latest transaction</div>
+                            </div>
+                            <div class="summary-item">
+                                <div class="summary-label">Last Transaction Profit ({{ last_transaction_date|date:"M d, Y" }})</div>
+                                <div class="summary-value">₹{{ last_transaction_profit|floatformat:0 }}</div>
+                                <div class="summary-trend positive">Latest transaction</div>
+                            </div>
+                            <div class="summary-item">
                                 <div class="summary-label">Daily Revenue ({{ current_month }})</div>
-                                <div class="summary-value">₹{{ recent_revenue|floatformat:0|default:"0" }}</div>
-                                <div class="summary-trend positive">Daily data</div>
-                            </div>
-                            <div class="summary-item">
-                                <div class="summary-label">Daily Expenses ({{ current_month }})</div>
-                                <div class="summary-value">₹{{ recent_expenses|floatformat:0|default:"0" }}</div>
-                                <div class="summary-trend neutral">Daily data</div>
-                            </div>
-                            <div class="summary-item">
-                                <div class="summary-label">Daily Profit ({{ current_month }})</div>
-                                <div class="summary-value">₹{{ recent_profit|floatformat:0|default:"0" }}</div>
-                                <div class="summary-trend positive">Daily data</div>
-                            </div>
-                            <div class="summary-item">
-                                <div class="summary-label">Daily Revenue ({{ current_month }})</div>
-                                <div class="summary-value">₹{{ avg_daily_revenue|floatformat:0|default:"0" }}</div>
+                                <div class="summary-value">₹{{ avg_daily_revenue|floatformat:0 }}</div>
                                 <div class="summary-trend positive">Daily data</div>
                             </div>
                         </div>
@@ -269,7 +273,7 @@
                 {% if daily_data %}
                 <div class="widget">
                     <div class="widget-header">
-                        <div class="title">Recent Daily Financial Data (Last 20 Days)</div>
+                        <div class="title">Current Month Daily Financial Data ({{ current_month }})</div>
                     </div>
                     <div class="widget-content">
                         <div class="daily-data-table">
@@ -302,6 +306,7 @@
                     <div class="widget-content">
                         <div class="analytics-info">
                             <p><strong>Current Dashboard:</strong> Shows daily data for {{ current_month }} with trends vs previous day</p>
+                            <p><strong>Latest Transaction:</strong> {{ last_transaction_date|date:"M d, Y" }} - ₹{{ last_transaction_revenue|floatformat:0 }}</p>
                             <p><strong>Data Period:</strong> {{ data_period }} ({{ historical_period }})</p>
                             <p><strong>Analytics Page:</strong> View detailed monthly, quarterly, and yearly breakdowns</p>
                             <a href="{% url 'analytics' %}" class="btn-primary">View Detailed Analytics</a>
@@ -366,7 +371,7 @@
                             <div class="expense-item">
                                 <div class="expense-info">
                                     <span class="expense-name">Operations</span>
-                                    <span class="expense-amount">$45,250</span>
+                                    <span class="expense-amount">₹{{ operations_expense|floatformat:0 }}</span>
                                 </div>
                                 <div class="expense-progress">
                                     <div class="progress-track">
@@ -379,7 +384,7 @@
                             <div class="expense-item">
                                 <div class="expense-info">
                                     <span class="expense-name">Marketing</span>
-                                    <span class="expense-amount">$18,900</span>
+                                    <span class="expense-amount">₹{{ marketing_expense|floatformat:0 }}</span>
                                 </div>
                                 <div class="expense-progress">
                                     <div class="progress-track">
@@ -392,7 +397,7 @@
                             <div class="expense-item">
                                 <div class="expense-info">
                                     <span class="expense-name">Administrative</span>
-                                    <span class="expense-amount">$8,500</span>
+                                    <span class="expense-amount">₹{{ administrative_expense|floatformat:0 }}</span>
                                 </div>
                                 <div class="expense-progress">
                                     <div class="progress-track">
@@ -405,7 +410,7 @@
                             <div class="expense-item">
                                 <div class="expense-info">
                                     <span class="expense-name">Technology</span>
-                                    <span class="expense-amount">$12,340</span>
+                                    <span class="expense-amount">₹{{ technology_expense|floatformat:0 }}</span>
                                 </div>
                                 <div class="expense-progress">
                                     <div class="progress-track">
@@ -431,7 +436,7 @@
                                 </div>
                                 <div class="income-content">
                                     <div class="income-source">Service Revenue</div>
-                                    <div class="income-amount">$125,800</div>
+                                    <div class="income-amount">₹{{ service_revenue|floatformat:0 }}</div>
                                     <div class="income-percentage">68% of total income</div>
                                 </div>
                             </div>
@@ -442,7 +447,7 @@
                                 </div>
                                 <div class="income-content">
                                     <div class="income-source">Product Sales</div>
-                                    <div class="income-amount">$45,200</div>
+                                    <div class="income-amount">₹{{ product_sales|floatformat:0 }}</div>
                                     <div class="income-percentage">24% of total income</div>
                                 </div>
                             </div>
@@ -453,7 +458,7 @@
                                 </div>
                                 <div class="income-content">
                                     <div class="income-source">Consulting</div>
-                                    <div class="income-amount">$15,000</div>
+                                    <div class="income-amount">₹{{ consulting_revenue|floatformat:0 }}</div>
                                     <div class="income-percentage">8% of total income</div>
                                 </div>
                             </div>

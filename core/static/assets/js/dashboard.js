@@ -7,6 +7,117 @@ document.addEventListener('DOMContentLoaded', function() {
     initLiveClock();
     initNotifications();
     
+    // Format currency values with single delay to prevent interference
+    setTimeout(formatCurrencyValues, 500);
+    
+    // Format currency values with multiple delays to ensure DOM is ready
+    function formatCurrencyValues() {
+        // Format specific metric values by ID
+        const totalExpenses = document.getElementById('total-expenses');
+        const totalRevenue = document.getElementById('total-revenue');
+        const totalProfit = document.getElementById('total-profit');
+        const profitMargin = document.getElementById('profit-margin');
+        
+        // Format total expenses
+        if (totalExpenses) {
+            let text = totalExpenses.textContent;
+            // Ensure rupee symbol is present
+            if (!text.includes('₹')) {
+                text = '₹' + text.replace(/[^\d]/g, '');
+            }
+            if (text.includes('₹') && text.match(/\d+/)) {
+                const numberMatch = text.match(/₹(\d+)/);
+                if (numberMatch) {
+                    const number = parseInt(numberMatch[1]);
+                    const formattedNumber = number.toLocaleString('en-IN');
+                    totalExpenses.textContent = `₹${formattedNumber}`;
+                }
+            }
+        }
+        
+        // Format total revenue
+        if (totalRevenue) {
+            let text = totalRevenue.textContent;
+            // Ensure rupee symbol is present
+            if (!text.includes('₹')) {
+                text = '₹' + text.replace(/[^\d]/g, '');
+            }
+            if (text.includes('₹') && text.match(/\d+/)) {
+                const numberMatch = text.match(/₹(\d+)/);
+                if (numberMatch) {
+                    const number = parseInt(numberMatch[1]);
+                    const formattedNumber = number.toLocaleString('en-IN');
+                    totalRevenue.textContent = `₹${formattedNumber}`;
+                }
+            }
+        }
+        
+        // Format total profit
+        if (totalProfit) {
+            let text = totalProfit.textContent;
+            // Ensure rupee symbol is present
+            if (!text.includes('₹')) {
+                text = '₹' + text.replace(/[^\d]/g, '');
+            }
+            if (text.includes('₹') && text.match(/\d+/)) {
+                const numberMatch = text.match(/₹(\d+)/);
+                if (numberMatch) {
+                    const number = parseInt(numberMatch[1]);
+                    const formattedNumber = number.toLocaleString('en-IN');
+                    totalProfit.textContent = `₹${formattedNumber}`;
+                }
+            }
+        }
+        
+        // Format summary values
+        const summaryValues = document.querySelectorAll('.summary-value');
+        summaryValues.forEach(element => {
+            let text = element.textContent;
+            
+            // Add rupee symbol if missing
+            if (!text.includes('₹') && text.match(/\d+/)) {
+                text = '₹' + text.replace(/[^\d]/g, '');
+            }
+            
+            // Format with commas
+            if (text.includes('₹') && text.match(/\d+/)) {
+                const numberMatch = text.match(/₹(\d+)/);
+                if (numberMatch) {
+                    const number = parseInt(numberMatch[1]);
+                    const formattedNumber = number.toLocaleString('en-IN');
+                    element.textContent = `₹${formattedNumber}`;
+                }
+            }
+        });
+        
+        // Format table cells - EXCLUDE DATE COLUMN
+        const tableRows = document.querySelectorAll('.table-row');
+        tableRows.forEach(row => {
+            const cells = row.querySelectorAll('.table-cell');
+            cells.forEach((cell, index) => {
+                // Skip the first cell (date column)
+                if (index === 0) return;
+                
+                let text = cell.textContent;
+                
+                // Add rupee symbol if missing
+                if (!text.includes('₹') && text.match(/\d+/)) {
+                    text = '₹' + text.replace(/[^\d]/g, '');
+                }
+                
+                // Format with commas
+                if (text.includes('₹') && text.match(/\d+/)) {
+                    const numberMatch = text.match(/₹(\d+)/);
+                    if (numberMatch) {
+                        const number = parseInt(numberMatch[1]);
+                        const formattedNumber = number.toLocaleString('en-IN');
+                        cell.textContent = `₹${formattedNumber}`;
+                    }
+                }
+            });
+        });
+    }
+    
     // Theme Management (Same as login/index pages)
     function initTheme() {
         const themeCheckbox = document.getElementById('theme-checkbox');
@@ -103,13 +214,43 @@ document.addEventListener('DOMContentLoaded', function() {
         if (chartCanvas) {
             const ctx = chartCanvas.getContext('2d');
             
+            // Get dynamic data from Django template
+            let chartData = [];
+            let chartLabels = [];
+            
+            // Check if trend_data is available from Django
+            if (typeof trendData !== 'undefined' && trendData) {
+                try {
+                    const data = JSON.parse(trendData);
+                    chartData = data.map(item => item.revenue);
+                    // Add "25" to month labels in frontend
+                    chartLabels = data.map(item => {
+                        const month = item.month;
+                        if (month === 'Jan' || month === 'Feb' || month === 'Mar') {
+                            return month + ' 26'; // For 2026 months
+                        } else {
+                            return month + ' 25'; // For 2025 months
+                        }
+                    });
+                } catch (e) {
+                    console.error('Error parsing trend data:', e);
+                    // Fallback to static data if parsing fails
+                    chartData = [650000, 720000, 680000, 750000, 820000, 790000, 850000, 847392];
+                    chartLabels = ['Jan 25', 'Feb 25', 'Mar 25', 'Apr 25', 'May 25', 'Jun 25', 'Jul 25', 'Aug 25'];
+                }
+            } else {
+                // Fallback to static data if no Django data
+                chartData = [650000, 720000, 680000, 750000, 820000, 790000, 850000, 847392];
+                chartLabels = ['Jan 25', 'Feb 25', 'Mar 25', 'Apr 25', 'May 25', 'Jun 25', 'Jul 25', 'Aug 25'];
+            }
+            
             new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
+                    labels: chartLabels,
                     datasets: [{
-                        label: 'Revenue',
-                        data: [650000, 720000, 680000, 750000, 820000, 790000, 850000, 847392],
+                        label: 'Monthly Revenue (FY 2025-26)',
+                        data: chartData,
                         borderColor: getComputedStyle(document.documentElement).getPropertyValue('--accent-color').trim(),
                         backgroundColor: 'rgba(66, 153, 225, 0.1)',
                         borderWidth: 3,
@@ -128,6 +269,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     plugins: {
                         legend: {
                             display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return 'Monthly Revenue: ₹' + context.parsed.y.toLocaleString('en-IN');
+                                }
+                            }
                         }
                     },
                     scales: {
@@ -148,7 +296,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             ticks: {
                                 color: getComputedStyle(document.documentElement).getPropertyValue('--text-secondary').trim(),
                                 callback: function(value) {
-                                    return '$' + value.toLocaleString();
+                                    return '₹' + value.toLocaleString('en-IN');
                                 }
                             }
                         }

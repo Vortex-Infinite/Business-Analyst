@@ -76,28 +76,30 @@ def employee_login(request):
 
 @login_required
 def dashboard(request):
-    """Updated business analyst dashboard with daily data focus"""
+    """Updated business analyst dashboard with daily data focus and financial year chart"""
     company = Company.objects.first()
     
     if not company:
         return render(request, 'dashboard.html', {'error': 'No company data found. Please import financial data first.'})
     
-    # Get current date (or most recent available date)
-    current_date = timezone.now().date()
+    # Get August 1, 2025 data specifically
+    target_date = datetime(2025, 8, 1).date()
     
-    # Get the most recent available date from the database
-    latest_data = DailyFinancialData.objects.filter(company=company).order_by('-date').first()
-    if latest_data:
-        current_date = latest_data.date
-    
-    # Get daily data for the current/recent date
+    # Get daily data for August 1, 2025
     daily_data_for_display = DailyFinancialData.objects.filter(
         company=company,
-        date=current_date
+        date=target_date
     ).first()
     
+    # If August 1 data doesn't exist, get the most recent available date
+    if not daily_data_for_display:
+        latest_data = DailyFinancialData.objects.filter(company=company).order_by('-date').first()
+        if latest_data:
+            target_date = latest_data.date
+            daily_data_for_display = latest_data
+    
     # Get previous day data for comparison
-    previous_date = current_date - timedelta(days=1)
+    previous_date = target_date - timedelta(days=1)
     previous_day_data = DailyFinancialData.objects.filter(
         company=company,
         date=previous_date
@@ -171,13 +173,18 @@ def dashboard(request):
     if previous_stats['profit_margin'] and daily_stats['profit_margin']:
         margin_trend = daily_stats['profit_margin'] - previous_stats['profit_margin']
     
+    # Calculate profit margin dynamically from daily data
+    dynamic_profit_margin = 0
+    if daily_stats['revenue'] > 0:
+        dynamic_profit_margin = (daily_stats['profit'] / daily_stats['revenue']) * 100
+    
     # Enhanced performance stats with daily focus
     performance_stats = {
         'total_revenue': total_stats['total_revenue'] or 0,
         'total_expenditure': total_stats['total_expenditure'] or 0,
         'total_profit': total_stats['total_profit'] or 0,
         'actual_profit': daily_stats['profit'] or 0,
-        'avg_profit_margin': total_stats['avg_profit_margin'] or 0,
+        'avg_profit_margin': dynamic_profit_margin,  # Use dynamic calculation
         'max_revenue': total_stats['max_revenue'] or 0,
         'min_revenue': total_stats['min_revenue'] or 0,
         'revenue_trend': round(revenue_trend, 1) if revenue_trend else 0,
@@ -190,25 +197,57 @@ def dashboard(request):
         'roi': round((daily_stats['profit'] / daily_stats['expenditure'] * 100), 1) if daily_stats['expenditure'] else 0
     }
     
-    # Get recent daily data for charts (last 20 days)
-    recent_daily_data = DailyFinancialData.objects.filter(
-        company=company
-    ).order_by('-date')[:20]
+    # Calculate monthly totals for financial year (April 2025 to March 2026)
+    financial_year_data = []
+    months = [
+        ('Apr', 4, 2025), ('May', 5, 2025), ('Jun', 6, 2025), ('Jul', 7, 2025),
+        ('Aug', 8, 2025), ('Sep', 9, 2025), ('Oct', 10, 2025), ('Nov', 11, 2025),
+        ('Dec', 12, 2025), ('Jan', 1, 2026), ('Feb', 2, 2026), ('Mar', 3, 2026)
+    ]
     
-    # Prepare daily data for charts (JSON serializable)
-    daily_data_for_charts = []
-    for data in reversed(recent_daily_data):  # Reverse to get chronological order
-        daily_data_for_charts.append({
-            'date': data.date.strftime('%Y-%m-%d'),  # Convert to string for JSON
-            'revenue': float(data.revenue),
-            'expenditure': float(data.expenditure),
-            'profit': float(data.profit),
-            'profit_margin': float(data.profit_margin)
+    for month_name, month_num, year in months:
+        monthly_data = DailyFinancialData.objects.filter(
+            company=company,
+            date__year=year,
+            date__month=month_num
+        ).aggregate(
+            total_revenue=Sum('revenue'),
+            total_expenditure=Sum('expenditure'),
+            total_profit=Sum('profit')
+        )
+        
+        financial_year_data.append({
+            'month': month_name,
+            'revenue': float(monthly_data['total_revenue'] or 0),
+            'expenditure': float(monthly_data['total_expenditure'] or 0),
+            'profit': float(monthly_data['total_profit'] or 0)
         })
+    
+    # Get current month data for the daily data table
+    current_month_data = DailyFinancialData.objects.filter(
+        company=company,
+        date__year=target_date.year,
+        date__month=target_date.month
+    ).order_by('-date')
+    
+    # If no current month data, get the most recent month with data
+    if not current_month_data.exists():
+        latest_data = DailyFinancialData.objects.filter(company=company).order_by('-date').first()
+        if latest_data:
+            current_month_data = DailyFinancialData.objects.filter(
+                company=company,
+                date__year=latest_data.date.year,
+                date__month=latest_data.date.month
+            ).order_by('-date')
+    
+    # Get the last transaction data for Financial Summary
+    last_transaction = DailyFinancialData.objects.filter(
+        company=company
+    ).order_by('-date').first()
     
     # Prepare daily data for template (with date objects for template formatting)
     daily_data_for_template = []
-    for data in recent_daily_data:
+    for data in current_month_data:
         daily_data_for_template.append({
             'date': data.date,  # Keep as date object for template
             'revenue': float(data.revenue),
@@ -217,6 +256,12 @@ def dashboard(request):
             'profit_margin': float(data.profit_margin)
         })
     
+    # Debug: Print some sample data
+    if daily_data_for_template:
+        print(f"Sample data: {daily_data_for_template[0]}")
+        print(f"Revenue: {daily_data_for_template[0]['revenue']}")
+        print(f"Date: {daily_data_for_template[0]['date']}")
+    
     # Get date range for display
     first_date = all_data.first().date
     last_date = all_data.last().date
@@ -224,11 +269,11 @@ def dashboard(request):
     # Prepare context with daily focus
     context = {
         'company': company,
-        'recent_data': recent_daily_data,
+        'recent_data': current_month_data, # Changed to current_month_data
         'performance_stats': performance_stats,
-        'trend_data': json.dumps(daily_data_for_charts),  # JSON serializable data
+        'trend_data': json.dumps(financial_year_data),  # Monthly financial year data for chart
         
-        # Daily data (main focus)
+        # Daily data (main focus) - August 1, 2025 specific data
         'total_revenue': daily_stats['revenue'] or 0,
         'total_expenses': daily_stats['expenditure'] or 0,
         'total_profit': daily_stats['profit'] or 0,
@@ -238,11 +283,18 @@ def dashboard(request):
         'avg_daily_revenue': daily_stats['revenue'] or 0,  # This is now the daily revenue
         'avg_daily_expenses': daily_stats['expenditure'] or 0,  # This is now the daily expenses
         'avg_daily_profit': daily_stats['profit'] or 0,  # This is now the daily profit
+        
+        # Last transaction data for Financial Summary
+        'last_transaction_revenue': last_transaction.revenue if last_transaction else 0,
+        'last_transaction_expenses': last_transaction.expenditure if last_transaction else 0,
+        'last_transaction_profit': last_transaction.profit if last_transaction else 0,
+        'last_transaction_date': last_transaction.date if last_transaction else None,
+        
         'daily_data': daily_data_for_template,
-        'data_period': f"Daily Data ({current_date.strftime('%B %d, %Y')})",
-        'current_month': current_date.strftime('%B %d, %Y'),
+        'data_period': f"Daily Data ({target_date.strftime('%B %d, %Y')})",
+        'current_month': target_date.strftime('%B %Y'),  # Changed to show only month and year
         'historical_period': f"{first_date.strftime('%B %Y')} - {last_date.strftime('%B %Y')}",
-        'display_date': current_date
+        'display_date': target_date
     }
     
     return render(request, 'dashboard.html', context)

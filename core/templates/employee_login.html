@@ -1,0 +1,54 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ORBIS - Financial Analyst Login</title>
+    <link rel="stylesheet" href="{% static 'assets/css/style.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <div class="theme-switch-wrapper">
+        <label class="theme-switch" for="theme-checkbox">
+            <input type="checkbox" id="theme-checkbox" aria-label="Toggle dark mode" />
+            <div class="slider round">
+                <span class="knob">
+                    <i class="fas fa-sun" aria-hidden="true"></i>
+                    <i class="fas fa-moon" aria-hidden="true"></i>
+                </span>
+            </div>
+        </label>
+    </div>
+    <main class="login-container">
+        <h1 class="company-name">ORBIS</h1>
+        <h2>Financial Analyst Portal</h2>
+        <p class="subtitle">Please log in to continue</p>
+
+        <form method="post" action="{% url 'employee_login' %}">
+            {% csrf_token %}
+            {% if error %}
+                <div class="error-message">{{ error }}</div>
+            {% endif %}
+            <div class="input-group">
+                <label for="employeeId">Analyst Email</label>
+                <input type="email" id="employeeId" name="employeeId" required aria-describedby="employee-email-help">
+            </div>
+            <div class="input-group">
+                <label for="employeePassword">Password</label>
+                <input type="password" id="employeePassword" name="employeePassword" required aria-describedby="employee-password-help">
+            </div>
+            <div class="input-group">
+                <label for="employeeOtp">OTP Code</label>
+                <input type="text" id="employeeOtp" name="employeeOtp" required aria-describedby="employee-otp-help" placeholder="Enter OTP">
+                <small id="employee-otp-help">Demo OTP: 123456</small>
+            </div>
+            <button type="submit">Login</button>
+        </form>
+        <p class="admin-contact">Forgot your password? Please contact your Administrator.</p>
+    </main>
+    <footer class="powered-by">Powered by Vortex Infinite</footer>
+    <script src="{% static 'assets/js/script.js' %}"></script>
+</body>
+</html>
+

@@ -1,0 +1,679 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ORBIS - CEO Executive Dashboard</title>
+    <link rel="stylesheet" href="{% static 'assets/css/ceo_dashboard_style.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="dashboard-page">
+    <!-- Enhanced Sidebar for CEO -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo-container">
+                <div class="logo-icon">
+                    <i class="fas fa-crown"></i>
+                </div>
+                <div class="sidebar-logo">ORBIS CEO</div>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <div class="nav-section">
+                <div class="nav-section-title">EXECUTIVE OVERVIEW</div>
+                <a href="#" class="nav-item active" data-page="dashboard">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Executive Dashboard</span>
+                </a>
+                <a href="{% url 'analytics' %}" class="nav-item">
+                    <i class="fas fa-chart-network"></i>
+                    <span>Strategic Analytics</span>
+                </a>
+                <a href="#" class="nav-item" data-page="approvals">
+                    <i class="fas fa-stamp"></i>
+                    <span>Approvals Hub</span>
+                    <span class="notification-count">5</span>
+                </a>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-section-title">BUSINESS INTELLIGENCE</div>
+                <a href="#" class="nav-item" data-page="financial-overview">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Financial Overview</span>
+                </a>
+                <a href="#" class="nav-item" data-page="performance-insights">
+                    <i class="fas fa-bullseye"></i>
+                    <span>Performance Insights</span>
+                </a>
+                <a href="#" class="nav-item" data-page="market-analysis">
+                    <i class="fas fa-globe-americas"></i>
+                    <span>Market Analysis</span>
+                </a>
+                <a href="#" class="nav-item" data-page="competitive-intel">
+                    <i class="fas fa-chess"></i>
+                    <span>Competitive Intelligence</span>
+                </a>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-section-title">ORGANIZATIONAL</div>
+                <a href="#" class="nav-item" data-page="team-performance">
+                    <i class="fas fa-users-cog"></i>
+                    <span>Team Performance</span>
+                </a>
+                <a href="#" class="nav-item" data-page="project-portfolio">
+                    <i class="fas fa-folder-tree"></i>
+                    <span>Project Portfolio</span>
+                </a>
+                <a href="#" class="nav-item" data-page="risk-management">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>Risk Management</span>
+                </a>
+                <a href="#" class="nav-item" data-page="compliance">
+                    <i class="fas fa-balance-scale"></i>
+                    <span>Compliance Center</span>
+                </a>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-section-title">STRATEGIC TOOLS</div>
+                <a href="#" class="nav-item" data-page="board-reports">
+                    <i class="fas fa-file-contract"></i>
+                    <span>Board Reports</span>
+                </a>
+                <a href="#" class="nav-item" data-page="strategic-planning">
+                    <i class="fas fa-route"></i>
+                    <span>Strategic Planning</span>
+                </a>
+                <a href="#" class="nav-item" data-page="executive-settings">
+                    <i class="fas fa-cogs"></i>
+                    <span>Executive Settings</span>
+                </a>
+            </div>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="theme-switch-container">
+                <span class="theme-label">Dark Mode</span>
+                <label class="theme-switch" for="theme-checkbox">
+                    <input type="checkbox" id="theme-checkbox">
+                    <div class="slider round">
+                        <div class="knob">
+                            <i class="fas fa-sun"></i>
+                            <i class="fas fa-moon"></i>
+                        </div>
+                    </div>
+                </label>
+            </div>
+            <button class="sidebar-toggle" id="sidebar-toggle">
+                <i class="fas fa-chevron-left"></i>
+                <span>Collapse</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Content Wrapper -->
+    <div class="main-wrapper">
+        <!-- Enhanced Header with Notifications -->
+        <header class="dashboard-header">
+            <div class="header-left">
+                <div class="header-title">
+                    Executive Command Center
+                    <span id="live-time"></span>
+                </div>
+                <div class="header-subtitle">Strategic Business Intelligence Platform</div>
+            </div>
+            <div class="header-actions">
+                <div class="quick-actions">
+                    <button class="quick-action-item" title="Emergency Alert">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </button>
+                    <button class="quick-action-item" title="Global Search">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+                <div class="notifications">
+                    <button class="notification-btn" id="notification-btn">
+                        <i class="fas fa-bell"></i>
+                        <span class="notification-badge" id="notification-count">8</span>
+                    </button>
+                    
+                    <!-- Notification Dropdown -->
+                    <div class="notification-dropdown" id="notification-dropdown">
+                        <div class="notification-header">
+                            <h3>Notifications</h3>
+                            <button class="mark-all-read" id="mark-all-read">Mark all as read</button>
+                        </div>
+                        <div class="notification-list" id="notification-list">
+                            <div class="notification-item unread analyst-notification" data-type="analyst-publish">
+                                <div class="notification-icon">
+                                    <i class="fas fa-file-alt"></i>
+                                </div>
+                                <div class="notification-content">
+                                    <div class="notification-title">Market Analysis Report Published</div>
+                                    <div class="notification-text">John Analyst has published Q3 Market Analysis requiring your review</div>
+                                    <div class="notification-time">5 minutes ago</div>
+                                </div>
+                                <div class="notification-actions">
+                                    <button class="approve-btn" data-action="approve">Approve</button>
+                                    <button class="review-btn" data-action="review">Review</button>
+                                </div>
+                            </div>
+
+                            <div class="notification-item unread analyst-notification" data-type="analyst-confirm">
+                                <div class="notification-icon">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
+                                <div class="notification-content">
+                                    <div class="notification-title">Financial Projection Confirmed</div>
+                                    <div class="notification-text">Sarah Analyst confirmed Q4 financial projections - Action required</div>
+                                    <div class="notification-time">15 minutes ago</div>
+                                </div>
+                                <div class="notification-actions">
+                                    <button class="approve-btn" data-action="approve">Approve</button>
+                                    <button class="review-btn" data-action="review">Review</button>
+                                </div>
+                            </div>
+
+                            <div class="notification-item unread">
+                                <div class="notification-icon warning">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                </div>
+                                <div class="notification-content">
+                                    <div class="notification-title">Budget Alert: Engineering Dept</div>
+                                    <div class="notification-text">Q3 budget exceeded by 15% - Immediate attention required</div>
+                                    <div class="notification-time">1 hour ago</div>
+                                </div>
+                            </div>
+
+                            <div class="notification-item unread">
+                                <div class="notification-icon success">
+                                    <i class="fas fa-trophy"></i>
+                                </div>
+                                <div class="notification-content">
+                                    <div class="notification-title">Revenue Milestone Achieved</div>
+                                    <div class="notification-text">Q3 revenue target exceeded by $2.5M</div>
+                                    <div class="notification-time">2 hours ago</div>
+                                </div>
+                            </div>
+
+                            <div class="notification-item">
+                                <div class="notification-icon">
+                                    <i class="fas fa-calendar"></i>
+                                </div>
+                                <div class="notification-content">
+                                    <div class="notification-title">Board Meeting Reminder</div>
+                                    <div class="notification-text">Quarterly board meeting scheduled for tomorrow at 10:00 AM</div>
+                                    <div class="notification-time">4 hours ago</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="notification-footer">
+                            <a href="#" class="view-all-link">View All Notifications</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="profile-container">
+                    <button class="profile-btn" id="profile-btn">
+                        <img src="https://randomuser.me/api/portraits/men/45.jpg" alt="CEO Profile">
+                        <div class="profile-info">
+                            <div class="name">Robert Chen</div>
+                            <div class="title">Chief Executive Officer</div>
+                        </div>
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    
+                    <div class="profile-dropdown" id="profile-dropdown">
+                        <div class="dropdown-header">
+                            <div class="name">Robert Chen</div>
+                            <div class="email">robert.chen@orbis.com</div>
+                            <div class="title">Chief Executive Officer</div>
+                        </div>
+                        <div class="dropdown-section">
+                            <a href="#" class="dropdown-item">
+                                <i class="fas fa-user-crown"></i>
+                                Executive Profile
+                            </a>
+                            <a href="#" class="dropdown-item">
+                                <i class="fas fa-shield-check"></i>
+                                Security Settings
+                            </a>
+                            <a href="#" class="dropdown-item">
+                                <i class="fas fa-headset"></i>
+                                Executive Support
+                            </a>
+                        </div>
+                        <div class="dropdown-section">
+                            <button class="dropdown-item logout-btn" id="logout-btn">
+                                <i class="fas fa-sign-out-alt"></i>
+                                Secure Sign Out
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Dashboard Content -->
+        <main class="main-content">
+            <!-- Executive KPI Row -->
+            <div class="executive-kpi-row">
+                <div class="kpi-card primary">
+                    <div class="kpi-header">
+                        <div class="kpi-icon">
+                            <i class="fas fa-dollar-sign"></i>
+                        </div>
+                        <div class="kpi-trend positive">
+                            <i class="fas fa-arrow-up"></i>
+                            +18.5%
+                        </div>
+                    </div>
+                    <div class="kpi-content">
+                        <div class="kpi-value">$47.2M</div>
+                        <div class="kpi-label">Quarterly Revenue</div>
+                        <div class="kpi-comparison">vs $39.9M last quarter</div>
+                    </div>
+                </div>
+
+                <div class="kpi-card success">
+                    <div class="kpi-header">
+                        <div class="kpi-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div class="kpi-trend positive">
+                            <i class="fas fa-arrow-up"></i>
+                            +12.3%
+                        </div>
+                    </div>
+                    <div class="kpi-content">
+                        <div class="kpi-value">24.7%</div>
+                        <div class="kpi-label">Profit Margin</div>
+                        <div class="kpi-comparison">Industry avg: 18.2%</div>
+                    </div>
+                </div>
+
+                <div class="kpi-card warning">
+                    <div class="kpi-header">
+                        <div class="kpi-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="kpi-trend neutral">
+                            <i class="fas fa-minus"></i>
+                            +2.1%
+                        </div>
+                    </div>
+                    <div class="kpi-content">
+                        <div class="kpi-value">2,847</div>
+                        <div class="kpi-label">Employee Count</div>
+                        <div class="kpi-comparison">Target: 3,000 by Q4</div>
+                    </div>
+                </div>
+
+                <div class="kpi-card info">
+                    <div class="kpi-header">
+                        <div class="kpi-icon">
+                            <i class="fas fa-bullseye"></i>
+                        </div>
+                        <div class="kpi-trend positive">
+                            <i class="fas fa-arrow-up"></i>
+                            +8.7%
+                        </div>
+                    </div>
+                    <div class="kpi-content">
+                        <div class="kpi-value">94.2%</div>
+                        <div class="kpi-label">Strategic Goals Achievement</div>
+                        <div class="kpi-comparison">12 of 13 goals on track</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Executive Dashboard Grid -->
+            <div class="executive-grid">
+                <!-- Revenue & Financial Analysis -->
+                <div class="widget executive-chart-widget">
+                    <div class="widget-header">
+                        <div class="header-content">
+                            <h3 class="widget-title">Revenue & Profitability Analysis</h3>
+                            <div class="widget-subtitle">Year-over-year performance metrics</div>
+                        </div>
+                        <div class="widget-actions">
+                            <button class="action-btn" title="Export Data">
+                                <i class="fas fa-download"></i>
+                            </button>
+                            <button class="action-btn" title="Fullscreen">
+                                <i class="fas fa-expand"></i>
+                            </button>
+                            <button class="action-btn" title="Settings">
+                                <i class="fas fa-cog"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="widget-content">
+                        <canvas id="revenueAnalysisChart" width="400" height="200"></canvas>
+                    </div>
+                </div>
+
+                <!-- Strategic Initiatives Status -->
+                <div class="widget">
+                    <div class="widget-header">
+                        <h3 class="widget-title">Strategic Initiatives</h3>
+                        <div class="progress-indicator">
+                            <span class="progress-text">Overall Progress: 87%</span>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 87%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="widget-content">
+                        <div class="initiative-list">
+                            <div class="initiative-item completed">
+                                <div class="initiative-status">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
+                                <div class="initiative-content">
+                                    <div class="initiative-title">Digital Transformation Phase 1</div>
+                                    <div class="initiative-progress">
+                                        <div class="progress-bar mini">
+                                            <div class="progress-fill" style="width: 100%"></div>
+                                        </div>
+                                        <span>100%</span>
+                                    </div>
+                                </div>
+                                <div class="initiative-budget">$2.8M</div>
+                            </div>
+
+                            <div class="initiative-item in-progress">
+                                <div class="initiative-status">
+                                    <i class="fas fa-clock"></i>
+                                </div>
+                                <div class="initiative-content">
+                                    <div class="initiative-title">Market Expansion - APAC</div>
+                                    <div class="initiative-progress">
+                                        <div class="progress-bar mini">
+                                            <div class="progress-fill" style="width: 78%"></div>
+                                        </div>
+                                        <span>78%</span>
+                                    </div>
+                                </div>
+                                <div class="initiative-budget">$5.2M</div>
+                            </div>
+
+                            <div class="initiative-item in-progress">
+                                <div class="initiative-status">
+                                    <i class="fas fa-clock"></i>
+                                </div>
+                                <div class="initiative-content">
+                                    <div class="initiative-title">Sustainability Program 2025</div>
+                                    <div class="initiative-progress">
+                                        <div class="progress-bar mini">
+                                            <div class="progress-fill" style="width: 65%"></div>
+                                        </div>
+                                        <span>65%</span>
+                                    </div>
+                                </div>
+                                <div class="initiative-budget">$1.9M</div>
+                            </div>
+
+                            <div class="initiative-item planning">
+                                <div class="initiative-status">
+                                    <i class="fas fa-calendar-alt"></i>
+                                </div>
+                                <div class="initiative-content">
+                                    <div class="initiative-title">AI Integration Framework</div>
+                                    <div class="initiative-progress">
+                                        <div class="progress-bar mini">
+                                            <div class="progress-fill" style="width: 25%"></div>
+                                        </div>
+                                        <span>25%</span>
+                                    </div>
+                                </div>
+                                <div class="initiative-budget">$3.5M</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Market Intelligence -->
+                <div class="widget">
+                    <div class="widget-header">
+                        <h3 class="widget-title">Market Intelligence</h3>
+                        <div class="widget-actions">
+                            <button class="action-btn">
+                                <i class="fas fa-sync"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="widget-content">
+                        <div class="market-metrics">
+                            <div class="market-item">
+                                <div class="market-indicator positive">
+                                    <i class="fas fa-trending-up"></i>
+                                </div>
+                                <div class="market-content">
+                                    <div class="market-label">Market Share</div>
+                                    <div class="market-value">23.4%</div>
+                                    <div class="market-change">+2.1% vs competition</div>
+                                </div>
+                            </div>
+
+                            <div class="market-item">
+                                <div class="market-indicator warning">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                </div>
+                                <div class="market-content">
+                                    <div class="market-label">Competitive Threat Level</div>
+                                    <div class="market-value">Medium</div>
+                                    <div class="market-change">New entrant detected</div>
+                                </div>
+                            </div>
+
+                            <div class="market-item">
+                                <div class="market-indicator positive">
+                                    <i class="fas fa-star"></i>
+                                </div>
+                                <div class="market-content">
+                                    <div class="market-label">Customer Satisfaction</div>
+                                    <div class="market-value">4.7/5.0</div>
+                                    <div class="market-change">Industry leading</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Executive Actions Required -->
+                <div class="widget urgent">
+                    <div class="widget-header">
+                        <h3 class="widget-title">
+                            <i class="fas fa-exclamation-circle"></i>
+                            Actions Required
+                        </h3>
+                        <div class="urgency-indicator">
+                            <span class="urgency-count">3</span>
+                        </div>
+                    </div>
+                    <div class="widget-content">
+                        <div class="action-list">
+                            <div class="action-item high-priority">
+                                <div class="action-indicator">
+                                    <i class="fas fa-fire"></i>
+                                </div>
+                                <div class="action-content">
+                                    <div class="action-title">Q3 Budget Approval - Engineering</div>
+                                    <div class="action-description">$3.2M additional budget request requires CEO approval</div>
+                                    <div class="action-deadline">Due: Today, 5:00 PM</div>
+                                </div>
+                                <div class="action-controls">
+                                    <button class="approve-btn">Approve</button>
+                                    <button class="review-btn">Review</button>
+                                </div>
+                            </div>
+
+                            <div class="action-item medium-priority">
+                                <div class="action-indicator">
+                                    <i class="fas fa-handshake"></i>
+                                </div>
+                                <div class="action-content">
+                                    <div class="action-title">Strategic Partnership Agreement</div>
+                                    <div class="action-description">TechCorp partnership proposal awaiting final signature</div>
+                                    <div class="action-deadline">Due: Tomorrow, 12:00 PM</div>
+                                </div>
+                                <div class="action-controls">
+                                    <button class="approve-btn">Sign</button>
+                                    <button class="review-btn">Review</button>
+                                </div>
+                            </div>
+
+                            <div class="action-item medium-priority">
+                                <div class="action-indicator">
+                                    <i class="fas fa-users"></i>
+                                </div>
+                                <div class="action-content">
+                                    <div class="action-title">VP of Sales Hiring Decision</div>
+                                    <div class="action-description">Final candidates selected - executive decision required</div>
+                                    <div class="action-deadline">Due: End of week</div>
+                                </div>
+                                <div class="action-controls">
+                                    <button class="approve-btn">Decide</button>
+                                    <button class="review-btn">Review</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Board & Stakeholder Updates -->
+                <div class="widget">
+                    <div class="widget-header">
+                        <h3 class="widget-title">Board & Stakeholder Updates</h3>
+                    </div>
+                    <div class="widget-content">
+                        <div class="update-timeline">
+                            <div class="timeline-item">
+                                <div class="timeline-date">
+                                    <div class="date-day">15</div>
+                                    <div class="date-month">AUG</div>
+                                </div>
+                                <div class="timeline-content">
+                                    <div class="timeline-title">Quarterly Board Meeting</div>
+                                    <div class="timeline-description">Present Q3 results and Q4 strategy</div>
+                                    <div class="timeline-attendees">12 board members attending</div>
+                                </div>
+                                <div class="timeline-status prepared">
+                                    <i class="fas fa-check"></i>
+                                </div>
+                            </div>
+
+                            <div class="timeline-item">
+                                <div class="timeline-date">
+                                    <div class="date-day">18</div>
+                                    <div class="date-month">AUG</div>
+                                </div>
+                                <div class="timeline-content">
+                                    <div class="timeline-title">Investor Conference Call</div>
+                                    <div class="timeline-description">Q3 earnings discussion with key investors</div>
+                                    <div class="timeline-attendees">8 institutional investors</div>
+                                </div>
+                                <div class="timeline-status pending">
+                                    <i class="fas fa-clock"></i>
+                                </div>
+                            </div>
+
+                            <div class="timeline-item">
+                                <div class="timeline-date">
+                                    <div class="date-day">22</div>
+                                    <div class="date-month">AUG</div>
+                                </div>
+                                <div class="timeline-content">
+                                    <div class="timeline-title">All-Hands Town Hall</div>
+                                    <div class="timeline-description">Company-wide strategic updates</div>
+                                    <div class="timeline-attendees">All employees (2,847)</div>
+                                </div>
+                                <div class="timeline-status draft">
+                                    <i class="fas fa-edit"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Risk & Compliance Dashboard -->
+                <div class="widget">
+                    <div class="widget-header">
+                        <h3 class="widget-title">Risk & Compliance Monitor</h3>
+                        <div class="risk-score">
+                            <span class="score-label">Risk Score:</span>
+                            <span class="score-value low">2.3/10</span>
+                        </div>
+                    </div>
+                    <div class="widget-content">
+                        <div class="risk-categories">
+                            <div class="risk-category">
+                                <div class="risk-header">
+                                    <span class="risk-name">Financial Risk</span>
+                                    <span class="risk-level low">Low</span>
+                                </div>
+                                <div class="risk-bar">
+                                    <div class="risk-progress" style="width: 15%"></div>
+                                </div>
+                            </div>
+
+                            <div class="risk-category">
+                                <div class="risk-header">
+                                    <span class="risk-name">Operational Risk</span>
+                                    <span class="risk-level medium">Medium</span>
+                                </div>
+                                <div class="risk-bar">
+                                    <div class="risk-progress" style="width: 35%"></div>
+                                </div>
+                            </div>
+
+                            <div class="risk-category">
+                                <div class="risk-header">
+                                    <span class="risk-name">Compliance Status</span>
+                                    <span class="risk-level low">Compliant</span>
+                                </div>
+                                <div class="risk-bar">
+                                    <div class="risk-progress" style="width: 95%"></div>
+                                </div>
+                            </div>
+
+                            <div class="risk-category">
+                                <div class="risk-header">
+                                    <span class="risk-name">Cybersecurity</span>
+                                    <span class="risk-level low">Secure</span>
+                                </div>
+                                <div class="risk-bar">
+                                    <div class="risk-progress" style="width: 88%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Executive Footer -->
+        <div class="dashboard-footer">
+            <div class="footer-content">
+                <div class="powered-by">
+                    ORBIS Executive Intelligence Platform &copy; 2025 | 
+                    <span class="security-status">
+                        <i class="fas fa-shield-check"></i>
+                        Secure Connection
+                    </span>
+                </div>
+                <div class="last-updated">
+                    Last updated: <span id="last-updated-time"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{% static 'assets/js/ceo_dashboard.js' %}"></script>
+</body>
+</html>

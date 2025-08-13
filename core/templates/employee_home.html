@@ -1,0 +1,67 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" class="dashboard-page">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Portal - ABC INC</title>
+    <link rel="stylesheet" href="{% static 'assets/css/dashboard_style.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h1 class="sidebar-logo">ABC INC</h1>
+            <button class="sidebar-toggle" id="sidebar-toggle"><i class="fas fa-chevron-left"></i></button>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="#" class="nav-item active"><i class="fas fa-user-circle"></i><span>My Profile</span></a>
+            <a href="#" class="nav-item"><i class="fas fa-calendar-alt"></i><span>Time Off</span></a>
+            <a href="#" class="nav-item"><i class="fas fa-file-alt"></i><span>Documents</span></a>
+        </nav>
+    </aside>
+
+    <div class="main-wrapper">
+        <header class="dashboard-header">
+            <div class="header-title">Employee Portal</div>
+            <button class="logout-btn" id="logout-btn">Logout</button>
+        </header>
+
+        <main class="main-content">
+            <div class="welcome-message">
+                <h1>Welcome, Employee!</h1>
+                <p>This is your personal dashboard. More features coming soon!</p>
+            </div>
+        </main>
+
+        <footer class="dashboard-footer">
+            <div class="powered-by">Powered by Vortex Infinite</div>
+             <div class="theme-switch-wrapper">
+                <label class="theme-switch" for="theme-checkbox">
+                    <input type="checkbox" id="theme-checkbox" aria-label="Toggle dark mode" />
+                    <div class="slider round"><span class="knob"><i class="fas fa-sun" aria-hidden="true"></i><i class="fas fa-moon" aria-hidden="true"></i></span></div>
+                </label>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Check authentication before loading the page
+        document.addEventListener('DOMContentLoaded', () => {
+            const currentUser = localStorage.getItem('currentUser');
+            if (!currentUser) {
+                window.location.href = "{% url 'employee_login' %}";
+                return;
+            }
+            
+            const user = JSON.parse(currentUser);
+            if (user.role !== 'Employee') {
+                window.location.href = "{% url 'employee_login' %}";
+                return;
+            }
+        });
+    </script>
+    <script src="{% static 'assets/js/auth.js' %}"></script>
+    <script src="{% static 'assets/js/script.js' %}"></script>
+</body>
+</html> 

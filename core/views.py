@@ -10,8 +10,7 @@ from .models import DailyFinancialData, Company, QuarterlySummary, UserProfile
 
 def index(request):
     """Enhanced landing page with real data preview"""
-    if request.user.is_authenticated:
-        return redirect('dashboard')
+    # Don't automatically redirect authenticated users - let them choose
     
     # Get latest company data for preview
     try:
@@ -24,37 +23,52 @@ def index(request):
             'latest_profit': latest_data.profit if latest_data else 0,
             'latest_profit_margin': latest_data.profit_margin if latest_data else 0,
             'last_updated': latest_data.date if latest_data else None,
+            'user_authenticated': request.user.is_authenticated,
         }
     except Exception as e:
-        context = {'error': str(e)}
+        context = {'error': str(e), 'user_authenticated': request.user.is_authenticated}
     
     return render(request, 'index.html', context)
 
 def hr_login(request):
-    """HR login with authentication"""
+    """HR/Manager login with authentication and OTP verification"""
     if request.method == 'POST':
-        username = request.POST.get('hrId')
-        password = request.POST.get('hrPassword')
+        username = request.POST.get('hrId')  # Manager email
+        password = request.POST.get('hrPassword')  # Manager password
+        otp = request.POST.get('hrOtp')  # OTP code
+        
+        # Check OTP first (demo OTP is 123456)
+        if otp != '123456':
+            return render(request, 'hr_login.html', {'error': 'Invalid OTP code. Use 123456 for demo.'})
         
         user = authenticate(request, username=username, password=password)
         if user:
             login(request, user)
-            return redirect('ceo_dashboard')
+            # Set session timeout to 30 minutes for security
+            request.session.set_expiry(1800)
+            return redirect('ceo_dashboard')  # Manager goes to CEO dashboard
         else:
             return render(request, 'hr_login.html', {'error': 'Invalid credentials'})
     
     return render(request, 'hr_login.html')
 
 def employee_login(request):
-    """Employee login with authentication"""
+    """Employee/Analyst login with authentication and OTP verification"""
     if request.method == 'POST':
-        username = request.POST.get('employeeId')
-        password = request.POST.get('employeePassword')
+        username = request.POST.get('employeeId')  # Analyst email
+        password = request.POST.get('employeePassword')  # Analyst password
+        otp = request.POST.get('employeeOtp')  # OTP code
+        
+        # Check OTP first (demo OTP is 123456)
+        if otp != '123456':
+            return render(request, 'employee_login.html', {'error': 'Invalid OTP code. Use 123456 for demo.'})
         
         user = authenticate(request, username=username, password=password)
         if user:
             login(request, user)
-            return redirect('dashboard')
+            # Set session timeout to 30 minutes for security
+            request.session.set_expiry(1800)
+            return redirect('dashboard')  # Analyst goes to business analyst dashboard
         else:
             return render(request, 'employee_login.html', {'error': 'Invalid credentials'})
     
@@ -62,85 +76,110 @@ def employee_login(request):
 
 @login_required
 def dashboard(request):
-    """Updated business analyst dashboard with financial metrics"""
+    """Updated business analyst dashboard with current month focus"""
     company = Company.objects.first()
     
     if not company:
         return render(request, 'dashboard.html', {'error': 'No company data found. Please import financial data first.'})
     
-    # Get recent data for analysis
-    recent_data = DailyFinancialData.objects.filter(company=company)[:30]
+    # Get current month and year
+    current_date = timezone.now().date()
+    current_month = current_date.month
+    current_year = current_date.year
     
-    # Performance metrics for last 90 days
-    ninety_days_ago = timezone.now().date() - timedelta(days=90)
-    thirty_days_ago = timezone.now().date() - timedelta(days=30)
-    sixty_days_ago = timezone.now().date() - timedelta(days=60)
-    
-    # Current period stats
-    current_stats = DailyFinancialData.objects.filter(
+    # Get current month data
+    current_month_data = DailyFinancialData.objects.filter(
         company=company,
-        date__gte=thirty_days_ago
-    ).aggregate(
+        date__year=current_year,
+        date__month=current_month
+    ).order_by('date')
+    
+    # Get previous month data for comparison
+    previous_month = current_month - 1 if current_month > 1 else 12
+    previous_year = current_year if current_month > 1 else current_year - 1
+    
+    previous_month_data = DailyFinancialData.objects.filter(
+        company=company,
+        date__year=previous_year,
+        date__month=previous_month
+    ).order_by('date')
+    
+    # Get all historical data for total stats
+    all_data = DailyFinancialData.objects.filter(company=company).order_by('date')
+    
+    if not all_data.exists():
+        return render(request, 'dashboard.html', {'error': 'No financial data found. Please import financial data first.'})
+    
+    # Calculate current month stats
+    current_month_stats = current_month_data.aggregate(
         total_revenue=Sum('revenue'),
         total_expenditure=Sum('expenditure'),
-        actual_profit=Sum('profit'),
+        total_profit=Sum('profit'),
+        avg_profit_margin=Avg('profit_margin'),
+        avg_daily_revenue=Avg('revenue'),
+        avg_daily_expenses=Avg('expenditure'),
+        avg_daily_profit=Avg('profit')
+    )
+    
+    # Calculate previous month stats
+    previous_month_stats = previous_month_data.aggregate(
+        total_revenue=Sum('revenue'),
+        total_expenditure=Sum('expenditure'),
+        total_profit=Sum('profit'),
+        avg_profit_margin=Avg('profit_margin')
+    )
+    
+    # Calculate total historical stats
+    total_stats = all_data.aggregate(
+        total_revenue=Sum('revenue'),
+        total_expenditure=Sum('expenditure'),
+        total_profit=Sum('profit'),
         avg_profit_margin=Avg('profit_margin'),
         max_revenue=Max('revenue'),
         min_revenue=Min('revenue')
     )
     
-    # Previous period stats for comparison
-    previous_stats = DailyFinancialData.objects.filter(
-        company=company,
-        date__gte=sixty_days_ago,
-        date__lt=thirty_days_ago
-    ).aggregate(
-        total_revenue=Sum('revenue'),
-        total_expenditure=Sum('expenditure'),
-        actual_profit=Sum('profit'),
-        avg_profit_margin=Avg('profit_margin')
-    )
-    
-    # Calculate trends
+    # Calculate trends (current month vs previous month)
     revenue_trend = 0
     expense_trend = 0
     profit_trend = 0
     margin_trend = 0
     
-    if previous_stats['total_revenue'] and current_stats['total_revenue']:
-        revenue_trend = ((current_stats['total_revenue'] - previous_stats['total_revenue']) / previous_stats['total_revenue']) * 100
+    if previous_month_stats['total_revenue'] and current_month_stats['total_revenue']:
+        revenue_trend = ((current_month_stats['total_revenue'] - previous_month_stats['total_revenue']) / previous_month_stats['total_revenue']) * 100
     
-    if previous_stats['total_expenditure'] and current_stats['total_expenditure']:
-        expense_trend = ((current_stats['total_expenditure'] - previous_stats['total_expenditure']) / previous_stats['total_expenditure']) * 100
+    if previous_month_stats['total_expenditure'] and current_month_stats['total_expenditure']:
+        expense_trend = ((current_month_stats['total_expenditure'] - previous_month_stats['total_expenditure']) / previous_month_stats['total_expenditure']) * 100
     
-    if previous_stats['actual_profit'] and current_stats['actual_profit']:
-        profit_trend = ((current_stats['actual_profit'] - previous_stats['actual_profit']) / previous_stats['actual_profit']) * 100
+    if previous_month_stats['total_profit'] and current_month_stats['total_profit']:
+        profit_trend = ((current_month_stats['total_profit'] - previous_month_stats['total_profit']) / previous_month_stats['total_profit']) * 100
     
-    if previous_stats['avg_profit_margin'] and current_stats['avg_profit_margin']:
-        margin_trend = current_stats['avg_profit_margin'] - previous_stats['avg_profit_margin']
+    if previous_month_stats['avg_profit_margin'] and current_month_stats['avg_profit_margin']:
+        margin_trend = current_month_stats['avg_profit_margin'] - previous_month_stats['avg_profit_margin']
     
-    # Enhanced performance stats
+    # Enhanced performance stats with current month focus
     performance_stats = {
-        'total_revenue': current_stats['total_revenue'] or 0,
-        'total_expenditure': current_stats['total_expenditure'] or 0,
-        'actual_profit': current_stats['actual_profit'] or 0,
-        'avg_profit_margin': current_stats['avg_profit_margin'] or 0,
-        'max_revenue': current_stats['max_revenue'] or 0,
-        'min_revenue': current_stats['min_revenue'] or 0,
+        'total_revenue': total_stats['total_revenue'] or 0,
+        'total_expenditure': total_stats['total_expenditure'] or 0,
+        'total_profit': total_stats['total_profit'] or 0,
+        'actual_profit': current_month_stats['total_profit'] or 0,
+        'avg_profit_margin': total_stats['avg_profit_margin'] or 0,
+        'max_revenue': total_stats['max_revenue'] or 0,
+        'min_revenue': total_stats['min_revenue'] or 0,
         'revenue_trend': round(revenue_trend, 1) if revenue_trend else 0,
         'expense_trend': round(expense_trend, 1) if expense_trend else 0,
         'profit_trend': round(profit_trend, 1) if profit_trend else 0,
         'margin_trend': round(margin_trend, 1) if margin_trend else 0,
-        'monthly_revenue': current_stats['total_revenue'] or 0,
-        'monthly_expenses': current_stats['total_expenditure'] or 0,
-        'monthly_profit': current_stats['actual_profit'] or 0,
-        'roi': round((current_stats['actual_profit'] / current_stats['total_expenditure'] * 100), 1) if current_stats['total_expenditure'] else 0
+        'monthly_revenue': current_month_stats['total_revenue'] or 0,
+        'monthly_expenses': current_month_stats['total_expenditure'] or 0,
+        'monthly_profit': current_month_stats['total_profit'] or 0,
+        'roi': round((current_month_stats['total_profit'] / current_month_stats['total_expenditure'] * 100), 1) if current_month_stats['total_expenditure'] else 0
     }
     
-    # Trend data for charts (last 10 days)
-    trend_data = []
-    for data in recent_data[:10]:
-        trend_data.append({
+    # Prepare daily data for charts (current month)
+    daily_data = []
+    for data in current_month_data[:20]:  # Last 20 days of current month
+        daily_data.append({
             'date': data.date.strftime('%Y-%m-%d'),
             'revenue': float(data.revenue),
             'expenditure': float(data.expenditure),
@@ -148,11 +187,31 @@ def dashboard(request):
             'profit_margin': float(data.profit_margin)
         })
     
+    # Get date range for display
+    first_date = all_data.first().date
+    last_date = all_data.last().date
+    
+    # Prepare context with current month focus
     context = {
         'company': company,
-        'recent_data': recent_data,
+        'recent_data': current_month_data,
         'performance_stats': performance_stats,
-        'trend_data': json.dumps(trend_data[::-1]),  # Reverse for chronological order
+        'trend_data': json.dumps(daily_data[::-1]),  # Reverse for chronological order
+        
+        # Current month data (main focus)
+        'total_revenue': current_month_stats['total_revenue'] or 0,
+        'total_expenses': current_month_stats['total_expenditure'] or 0,
+        'total_profit': current_month_stats['total_profit'] or 0,
+        'recent_revenue': current_month_stats['total_revenue'] or 0,
+        'recent_expenses': current_month_stats['total_expenditure'] or 0,
+        'recent_profit': current_month_stats['total_profit'] or 0,
+        'avg_daily_revenue': round(current_month_stats['avg_daily_revenue'] or 0, 2),
+        'avg_daily_expenses': round(current_month_stats['avg_daily_expenses'] or 0, 2),
+        'avg_daily_profit': round(current_month_stats['avg_daily_profit'] or 0, 2),
+        'daily_data': daily_data,
+        'data_period': f"Current Month ({current_date.strftime('%B %Y')})",
+        'current_month': current_date.strftime('%B %Y'),
+        'historical_period': f"{first_date.strftime('%B %Y')} - {last_date.strftime('%B %Y')}"
     }
     
     return render(request, 'dashboard.html', context)
@@ -251,6 +310,29 @@ def logout_view(request):
     logout(request)
     return redirect('index')
 
+def logout_all(request):
+    """Clear all sessions and cookies to break redirect loops"""
+    logout(request)
+    # Clear all session data
+    request.session.flush()
+    # Clear any remaining cookies
+    response = redirect('index')
+    response.delete_cookie('sessionid')
+    response.delete_cookie('csrftoken')
+    return response
+
+def clear_session(request):
+    """Clear all browser data and start fresh"""
+    logout(request)
+    request.session.flush()
+    
+    response = render(request, 'session_cleared.html')
+    # Delete all cookies
+    response.delete_cookie('sessionid')
+    response.delete_cookie('csrftoken')
+    
+    return response
+
 # API endpoint for dynamic data
 @login_required
 def api_financial_data(request):
@@ -272,3 +354,148 @@ def api_financial_data(request):
     }
     
     return JsonResponse(chart_data)
+
+@login_required
+def analytics(request):
+    """Comprehensive analytics page with dropdown options for viewing past 5 years data"""
+    company = Company.objects.first()
+    
+    if not company:
+        return render(request, 'analytics.html', {'error': 'No company data found. Please import financial data first.'})
+    
+    # Get the selected period from request
+    period = request.GET.get('period', 'monthly')  # monthly, quarterly, yearly
+    year = request.GET.get('year', '2020')  # Default to 2020 since that's our data
+    
+    # Get all available years from the data
+    all_years = DailyFinancialData.objects.filter(company=company).values_list('date__year', flat=True).distinct().order_by('-date__year')
+    
+    # Get data based on selected period and year
+    if period == 'monthly':
+        # Monthly data for selected year
+        monthly_data = []
+        for month in range(1, 13):
+            month_data = DailyFinancialData.objects.filter(
+                company=company,
+                date__year=year,
+                date__month=month
+            ).aggregate(
+                revenue=Sum('revenue'),
+                expenses=Sum('expenditure'),
+                profit=Sum('profit'),
+                profit_margin=Avg('profit_margin'),
+                days_count=Count('id')
+            )
+            
+            if month_data['days_count'] > 0:
+                monthly_data.append({
+                    'month': f"{month:02d}",
+                    'month_name': f"{month:02d}",
+                    'revenue': float(month_data['revenue'] or 0),
+                    'expenses': float(month_data['expenses'] or 0),
+                    'profit': float(month_data['profit'] or 0),
+                    'profit_margin': round(float(month_data['profit_margin'] or 0), 2),
+                    'roi': round((float(month_data['profit'] or 0) / float(month_data['expenses'] or 1) * 100), 2) if month_data['expenses'] else 0
+                })
+        
+        period_data = monthly_data
+        period_label = "Monthly"
+        
+    elif period == 'quarterly':
+        # Quarterly data for selected year
+        quarterly_data = []
+        for quarter in range(1, 5):
+            start_month = (quarter - 1) * 3 + 1
+            end_month = quarter * 3
+            
+            quarter_data = DailyFinancialData.objects.filter(
+                company=company,
+                date__year=year,
+                date__month__gte=start_month,
+                date__month__lte=end_month
+            ).aggregate(
+                revenue=Sum('revenue'),
+                expenses=Sum('expenditure'),
+                profit=Sum('profit'),
+                profit_margin=Avg('profit_margin'),
+                days_count=Count('id')
+            )
+            
+            if quarter_data['days_count'] > 0:
+                quarterly_data.append({
+                    'quarter': f"Q{quarter}",
+                    'period': f"Q{quarter}",
+                    'revenue': float(quarter_data['revenue'] or 0),
+                    'expenses': float(quarter_data['expenses'] or 0),
+                    'profit': float(quarter_data['profit'] or 0),
+                    'profit_margin': round(float(quarter_data['profit_margin'] or 0), 2),
+                    'roi': round((float(quarter_data['profit'] or 0) / float(quarter_data['expenses'] or 1) * 100), 2) if quarter_data['expenses'] else 0
+                })
+        
+        period_data = quarterly_data
+        period_label = "Quarterly"
+        
+    else:  # yearly
+        # Yearly data for past 5 years
+        yearly_data = []
+        for y in all_years[:5]:  # Last 5 years
+            year_data = DailyFinancialData.objects.filter(
+                company=company,
+                date__year=y
+            ).aggregate(
+                revenue=Sum('revenue'),
+                expenses=Sum('expenditure'),
+                profit=Sum('profit'),
+                profit_margin=Avg('profit_margin'),
+                days_count=Count('id')
+            )
+            
+            if year_data['days_count'] > 0:
+                yearly_data.append({
+                    'year': str(y),
+                    'period': str(y),
+                    'revenue': float(year_data['revenue'] or 0),
+                    'expenses': float(year_data['expenses'] or 0),
+                    'profit': float(year_data['profit'] or 0),
+                    'profit_margin': round(float(year_data['profit_margin'] or 0), 2),
+                    'roi': round((float(year_data['profit'] or 0) / float(year_data['expenses'] or 1) * 100), 2) if year_data['expenses'] else 0
+                })
+        
+        period_data = yearly_data
+        period_label = "Yearly"
+    
+    # Calculate summary statistics
+    total_revenue = sum(item['revenue'] for item in period_data)
+    total_expenses = sum(item['expenses'] for item in period_data)
+    total_profit = sum(item['profit'] for item in period_data)
+    avg_profit_margin = sum(item['profit_margin'] for item in period_data) / len(period_data) if period_data else 0
+    avg_roi = sum(item['roi'] for item in period_data) / len(period_data) if period_data else 0
+    
+    # Prepare chart data
+    chart_data = {
+        'labels': [item['period'] for item in period_data],
+        'revenue': [item['revenue'] for item in period_data],
+        'expenses': [item['expenses'] for item in period_data],
+        'profit': [item['profit'] for item in period_data],
+        'profit_margin': [item['profit_margin'] for item in period_data],
+        'roi': [item['roi'] for item in period_data]
+    }
+    
+    context = {
+        'company': company,
+        'period': period,
+        'year': year,
+        'period_label': period_label,
+        'period_data': period_data,
+        'all_years': all_years,
+        'chart_data': json.dumps(chart_data),
+        'summary': {
+            'total_revenue': total_revenue,
+            'total_expenses': total_expenses,
+            'total_profit': total_profit,
+            'avg_profit_margin': round(avg_profit_margin, 2),
+            'avg_roi': round(avg_roi, 2)
+        }
+    }
+    
+    return render(request, 'analytics.html', context)

@@ -88,18 +88,10 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         if (logoutBtn) {
-            logoutBtn.addEventListener('click', async function() {
+            logoutBtn.addEventListener('click', function() {
                 if (confirm('Are you sure you want to sign out?')) {
-                    try {
-                        // Clear session data
-                        localStorage.removeItem('currentUser');
-                        localStorage.removeItem('theme');
-                        
-                        // Redirect to login
-                        window.location.href = '/';
-                    } catch (error) {
-                        console.error('Logout error:', error);
-                    }
+                    // Simple redirect to logout - no localStorage manipulation needed
+                    window.location.href = '/logout/';
                 }
             });
         }
@@ -215,7 +207,7 @@ document.addEventListener('DOMContentLoaded', function() {
             'finance': () => showNotification('Finance page - Coming soon!', 'info'),
             'clients': () => showNotification('Clients page - Coming soon!', 'info'),
             'performance': () => showNotification('Performance page - Coming soon!', 'info'),
-            'documents': () => window.location.href = '/documents/',
+            'documents': () => window.location.href = '/document/',
             'settings': () => showNotification('Settings page - Coming soon!', 'info')
         };
         
@@ -351,13 +343,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Animation starts automatically
             }, index * 200);
         });
-    }
-    
-    // Check authentication
-    const currentUser = localStorage.getItem('currentUser');
-    if (!currentUser) {
-        window.location.href = '/';
-        return;
     }
     
     console.log('Professional Dashboard initialized successfully');

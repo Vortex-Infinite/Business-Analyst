@@ -1,336 +1,349 @@
-// HR Dashboard page component
-window.DashboardPage = {
-    // --- STATE MANAGEMENT ---
-    clockInState: {
-        status: 'Clocked Out', // 'Clocked Out', 'Clocked In', 'On Break'
-        clockInTime: null,
-        breakStartTime: null,
-        timerInterval: null
-    },
-
-    init() {
-        // Load saved state from localStorage
-        const savedState = localStorage.getItem('clockInState');
-        if (savedState) {
-            this.clockInState = JSON.parse(savedState);
-        }
-        this.render();
-    },
-
-    render() {
-        document.getElementById('root').innerHTML = `
-            <div class="dashboard-container">
-                <div class="sidebar" id="sidebar">
-                    <div class="sidebar-logo">
-                        <h2>${CONFIG.COMPANY_BRAND}</h2>
-                        <button class="sidebar-toggle-btn-internal" id="sidebar-toggle">
-                            <i class="fas fa-bars"></i>
-                        </button>
-                    </div>
-                    <div class="sidebar-section">
-                        <div class="sidebar-section-title">Main</div>
-                        <button class="sidebar-menu-item active">
-                            <i class="fas fa-home"></i>
-                            <span>Dashboard</span>
-                        </button>
-                        <button class="sidebar-menu-item">
-                            <i class="fas fa-users"></i>
-                            <span>Employees</span>
-                        </button>
-                        <button class="sidebar-menu-item">
-                            <i class="fas fa-calendar-alt"></i>
-                            <span>Schedule</span>
-                        </button>
-                    </div>
-                    <div class="sidebar-section">
-                        <div class="sidebar-section-title">HR</div>
-                        <button class="sidebar-menu-item">
-                            <i class="fas fa-file-contract"></i>
-                            <span>Reports</span>
-                        </button>
-                        <button class="sidebar-menu-item">
-                            <i class="fas fa-cog"></i>
-                            <span>Settings</span>
-                        </button>
-                    </div>
-                </div>
-                <div class="dashboard-main">
-                    <div class="dash-header">
-                        <div class="dash-greeting">
-                            <b>Good ${this.getTimeGreeting()}, HR Manager!</b>
-                            <div style="font-size: 14px; color: var(--text-secondary); margin-top: 5px;">
-                                ${this.getCurrentDate()}
-                            </div>
-                        </div>
-                        <div class="header-actions">
-                            <button class="profile-btn" id="profile-btn">
-                                <img src="https://via.placeholder.com/40x40/5D3EBC/ffffff?text=HR" alt="Profile">
-                                <span>HR Manager</span>
-                                <i class="fas fa-chevron-down"></i>
-                            </button>
-                            <div class="profile-dropdown" id="profile-dropdown">
-                                <div class="dropdown-header">
-                                    <div class="name">HR Manager</div>
-                                    <div class="email">hr@${CONFIG.COMPANY_BRAND.toLowerCase().replace(' ', '')}.com</div>
-                                </div>
-                                <div class="dropdown-section">
-                                    <a href="#" class="dropdown-item">
-                                        <i class="fas fa-user"></i>
-                                        Profile Settings
-                                    </a>
-                                    <a href="#" class="dropdown-item">
-                                        <i class="fas fa-bell"></i>
-                                        Notifications
-                                    </a>
-                                </div>
-                                <div class="dropdown-section">
-                                    <a href="#" class="dropdown-item" onclick="DashboardPage.logout()">
-                                        <i class="fas fa-sign-out-alt"></i>
-                                        Logout
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="dash-grid">
-                        <div class="widget clock-in-widget-container">
-                        </div>
-                        <div class="widget">
-                            <div class="title">Recent Activity</div>
-                            <div class="inbox-msg">Employee John Doe clocked in at 9:00 AM</div>
-                            <div class="inbox-msg">New leave request from Jane Smith</div>
-                            <div class="inbox-msg">Payroll processing completed</div>
-                        </div>
-                        <div class="widget">
-                            <div class="title">Today's Schedule</div>
-                            <div class="event">Team Meeting - 10:00 AM</div>
-                            <div class="event">Performance Review - 2:00 PM</div>
-                            <div class="event">HR Planning Session - 4:00 PM</div>
-                        </div>
-                        <div class="widget">
-                            <div class="title">Quick Stats</div>
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
-                                <div style="text-align: center;">
-                                    <div style="font-size: 24px; font-weight: 600; color: var(--success);">24</div>
-                                    <div style="font-size: 12px; color: var(--text-secondary);">Employees Present</div>
-                                </div>
-                                <div style="text-align: center;">
-                                    <div style="font-size: 24px; font-weight: 600; color: var(--warning);">3</div>
-                                    <div style="font-size: 12px; color: var(--text-secondary);">Pending Requests</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-        // Initial render of the clock-in widget and other components
-        this.updateClockInWidget();
-        this.initializeInteractions();
-    },
-
-    // --- CLOCK-IN WIDGET LOGIC ---
-    updateClockInWidget() {
-        const container = document.querySelector('.clock-in-widget-container');
-        if (!container) return;
-
-        let statusText = this.clockInState.status.replace(/([A-Z])/g, ' $1').trim();
-        let buttonHTML = '';
-        let timerText = '00:00:00';
-
-        switch (this.clockInState.status) {
-            case 'Clocked Out':
-                buttonHTML = `<button class="btn btn-clock-in" onclick="DashboardPage.handleClockIn()">Clock In</button>`;
-                break;
-            case 'Clocked In':
-                buttonHTML = `
-                    <button class="btn btn-start-break" onclick="DashboardPage.handleStartBreak()">Start Break</button>
-                    <button class="btn btn-clock-out" onclick="DashboardPage.handleClockOut()">Clock Out</button>
-                `;
-                break;
-            case 'On Break':
-                 statusText = 'On Break';
-                buttonHTML = `<button class="btn btn-end-break" onclick="DashboardPage.handleEndBreak()">End Break</button>`;
-                break;
-        }
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize all dashboard components
+    initTheme();
+    initSidebar();
+    initProfileDropdown();
+    initCharts();
+    initLiveClock();
+    initNotifications();
+    
+    // Theme Management (Same as login/index pages)
+    function initTheme() {
+        const themeCheckbox = document.getElementById('theme-checkbox');
         
-        container.innerHTML = `
-            <div class="title">Time Tracking</div>
-            <div class="clock-in-widget">
-                <div class="status-text">${statusText}</div>
-                <div class="timer" id="clock-in-timer">${timerText}</div>
-                <div class="widget-buttons">${buttonHTML}</div>
-            </div>
-        `;
-
-        this.startTimer();
-    },
-    
-    startTimer() {
-        if (this.clockInState.timerInterval) clearInterval(this.clockInState.timerInterval);
-        const timerElement = document.getElementById('clock-in-timer');
-        if (!timerElement) return;
-
-        const startTime = this.clockInState.status === 'On Break' ? this.clockInState.breakStartTime : this.clockInState.clockInTime;
-
-        if (!startTime) {
-            timerElement.textContent = '00:00:00';
-            return;
-        }
-        
-        this.clockInState.timerInterval = setInterval(() => {
-            const now = new Date();
-            const start = new Date(startTime);
-            const diff = now - start;
-
-            let seconds = Math.floor((diff / 1000) % 60);
-            let minutes = Math.floor((diff / (1000 * 60)) % 60);
-            let hours = Math.floor(diff / (1000 * 60 * 60));
-
-            hours = String(hours).padStart(2, '0');
-            minutes = String(minutes).padStart(2, '0');
-            seconds = String(seconds).padStart(2, '0');
-            
-            timerElement.textContent = `${hours}:${minutes}:${seconds}`;
-        }, 1000);
-    },
-
-    // --- EVENT HANDLERS ---
-    handleClockIn() {
-        this.clockInState.status = 'Clocked In';
-        this.clockInState.clockInTime = new Date().toISOString();
-        this.saveStateAndRerender();
-    },
-    handleStartBreak() {
-        this.clockInState.status = 'On Break';
-        this.clockInState.breakStartTime = new Date().toISOString();
-        this.saveStateAndRerender();
-    },
-    handleEndBreak() {
-        this.clockInState.status = 'Clocked In';
-        this.clockInState.breakStartTime = null; // Reset break time
-        this.saveStateAndRerender();
-    },
-    handleClockOut() {
-        if (confirm('Are you sure you want to clock out?')) {
-            this.clockInState.status = 'Clocked Out';
-            this.clockInState.clockInTime = null;
-            this.clockInState.breakStartTime = null;
-            if (this.clockInState.timerInterval) clearInterval(this.clockInState.timerInterval);
-            this.clockInState.timerInterval = null;
-            this.saveStateAndRerender();
-        }
-    },
-    
-    saveStateAndRerender() {
-        localStorage.setItem('clockInState', JSON.stringify(this.clockInState));
-        this.updateClockInWidget();
-    },
-    
-    // --- HELPER METHODS ---
-    getTimeGreeting() {
-        const hour = new Date().getHours();
-        if (hour < 12) return 'Morning';
-        if (hour < 17) return 'Afternoon';
-        return 'Evening';
-    },
-
-    getCurrentDate() {
-        const now = new Date();
-        const options = { 
-            weekday: 'long', 
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric' 
+        const applyTheme = (theme) => {
+            document.body.classList.toggle('dark-mode', theme === 'dark-mode');
+            if (themeCheckbox) themeCheckbox.checked = (theme === 'dark-mode');
+            localStorage.setItem('theme', theme);
         };
-        return now.toLocaleDateString('en-US', options);
-    },
 
-    // --- INTERACTION HANDLERS ---
-    initializeInteractions() {
-        // Sidebar toggle functionality
-        document.getElementById('sidebar-toggle')?.addEventListener('click', () => {
-            this.toggleSidebar();
-        });
+        // Check for saved theme, if none, check system preference
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme) {
+            applyTheme(savedTheme);
+        } else {
+            const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            applyTheme(prefersDark ? 'dark-mode' : 'light-mode');
+        }
 
-        // Profile dropdown toggle
-        document.getElementById('profile-btn')?.addEventListener('click', (e) => {
-            e.stopPropagation();
-            this.toggleProfileDropdown();
-        });
-
-        // Close dropdown when clicking outside
-        document.addEventListener('click', (e) => {
-            const dropdown = document.getElementById('profile-dropdown');
-            const profileBtn = document.getElementById('profile-btn');
-            if (dropdown && !profileBtn?.contains(e.target)) {
-                dropdown.classList.remove('active');
-            }
-        });
-
-        // Menu item interactions
-        document.querySelectorAll('.sidebar-menu-item').forEach(item => {
-            item.addEventListener('click', (e) => {
-                this.handleMenuItemClick(e.target.closest('.sidebar-menu-item'));
+        if (themeCheckbox) {
+            themeCheckbox.addEventListener('change', () => {
+                const newTheme = themeCheckbox.checked ? 'dark-mode' : 'light-mode';
+                applyTheme(newTheme);
             });
-        });
-    },
-
-    toggleSidebar() {
-        const sidebar = document.getElementById('sidebar');
-        if (!sidebar) return;
-        
-        sidebar.classList.toggle('collapsed');
-        
-        // Update toggle icon
-        const toggleBtn = document.getElementById('sidebar-toggle');
-        const icon = toggleBtn?.querySelector('i');
-        if (icon) {
-            if (sidebar.classList.contains('collapsed')) {
-                icon.className = 'fas fa-bars';
-            } else {
-                icon.className = 'fas fa-times';
-            }
-        }
-    },
-
-    toggleProfileDropdown() {
-        const dropdown = document.getElementById('profile-dropdown');
-        if (dropdown) {
-            dropdown.classList.toggle('active');
-        }
-    },
-
-    handleMenuItemClick(menuItem) {
-        if (!menuItem) return;
-        
-        // Remove active class from all menu items
-        document.querySelectorAll('.sidebar-menu-item').forEach(item => {
-            item.classList.remove('active');
-        });
-        
-        // Add active class to clicked item
-        menuItem.classList.add('active');
-        
-        // Get the menu item text for potential navigation
-        const menuText = menuItem.querySelector('span')?.textContent;
-        console.log(`Navigating to: ${menuText}`);
-        
-        // Here you could implement actual navigation logic
-        // For now, we'll just log the action
-    },
-
-    logout() {
-        if (confirm('Are you sure you want to logout?')) {
-            // Clear any stored data
-            localStorage.removeItem('clockInState');
-            localStorage.removeItem('currentUser');
-            
-            // Redirect to login page (you may need to update this URL)
-            window.location.href = '/core/hr_login/';
         }
     }
-};
-
-// Initial render when the script loads
-DashboardPage.init();
+    
+    // Sidebar functionality
+    function initSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        const sidebarToggle = document.getElementById('sidebar-toggle');
+        
+        if (sidebarToggle && sidebar) {
+            sidebarToggle.addEventListener('click', function() {
+                sidebar.classList.toggle('collapsed');
+                localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
+            });
+        }
+        
+        // Restore sidebar state
+        if (localStorage.getItem('sidebarCollapsed') === 'true') {
+            sidebar?.classList.add('collapsed');
+        }
+        
+        // Navigation items
+        const navItems = document.querySelectorAll('.nav-item');
+        navItems.forEach(item => {
+            item.addEventListener('click', function(e) {
+                e.preventDefault();
+                navItems.forEach(nav => nav.classList.remove('active'));
+                this.classList.add('active');
+                
+                // Handle page navigation
+                const page = this.dataset.page;
+                handlePageNavigation(page);
+            });
+        });
+    }
+    
+    // Profile dropdown functionality
+    function initProfileDropdown() {
+        const profileBtn = document.getElementById('profile-btn');
+        const profileDropdown = document.getElementById('profile-dropdown');
+        const logoutBtn = document.getElementById('logout-btn');
+        
+        if (profileBtn && profileDropdown) {
+            profileBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                profileDropdown.classList.toggle('active');
+            });
+            
+            document.addEventListener('click', function() {
+                profileDropdown.classList.remove('active');
+            });
+            
+            profileDropdown.addEventListener('click', function(e) {
+                e.stopPropagation();
+            });
+        }
+        
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', function() {
+                if (confirm('Are you sure you want to sign out?')) {
+                    // Simple redirect to logout - no localStorage manipulation needed
+                    window.location.href = '/logout/';
+                }
+            });
+        }
+    }
+    
+    // Initialize charts
+    function initCharts() {
+        const chartCanvas = document.getElementById('revenueChart');
+        if (chartCanvas) {
+            const ctx = chartCanvas.getContext('2d');
+            
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
+                    datasets: [{
+                        label: 'Revenue',
+                        data: [650000, 720000, 680000, 750000, 820000, 790000, 850000, 847392],
+                        borderColor: getComputedStyle(document.documentElement).getPropertyValue('--accent-color').trim(),
+                        backgroundColor: 'rgba(66, 153, 225, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: getComputedStyle(document.documentElement).getPropertyValue('--accent-color').trim(),
+                        pointBorderColor: '#ffffff',
+                        pointBorderWidth: 2,
+                        pointRadius: 5,
+                        pointHoverRadius: 7
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        x: {
+                            display: true,
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                color: getComputedStyle(document.documentElement).getPropertyValue('--text-secondary').trim()
+                            }
+                        },
+                        y: {
+                            display: true,
+                            grid: {
+                                color: getComputedStyle(document.documentElement).getPropertyValue('--border-color').trim()
+                            },
+                            ticks: {
+                                color: getComputedStyle(document.documentElement).getPropertyValue('--text-secondary').trim(),
+                                callback: function(value) {
+                                    return '$' + value.toLocaleString();
+                                }
+                            }
+                        }
+                    },
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    }
+                }
+            });
+        }
+    }
+    
+    // Live clock functionality
+    function initLiveClock() {
+        const timeElement = document.getElementById('live-time');
+        
+        function updateClock() {
+            if (timeElement) {
+                const now = new Date();
+                const options = {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    hour12: true
+                };
+                timeElement.textContent = now.toLocaleTimeString('en-US', options);
+            }
+        }
+        
+        updateClock();
+        setInterval(updateClock, 1000);
+    }
+    
+    // Notification functionality  
+    function initNotifications() {
+        const notificationBtn = document.querySelector('.notification-btn');
+        
+        if (notificationBtn) {
+            notificationBtn.addEventListener('click', function() {
+                showNotification('You have 3 new notifications', 'info');
+            });
+        }
+    }
+    
+    // Page navigation handler
+    function handlePageNavigation(page) {
+        console.log('Navigate to:', page);
+        
+        // Add your page navigation logic here
+        const actions = {
+            'dashboard': () => console.log('Dashboard selected'),
+            'analytics': () => showNotification('Analytics page - Coming soon!', 'info'),
+            'reports': () => showNotification('Reports page - Coming soon!', 'info'),
+            'projects': () => showNotification('Projects page - Coming soon!', 'info'),
+            'finance': () => showNotification('Finance page - Coming soon!', 'info'),
+            'clients': () => showNotification('Clients page - Coming soon!', 'info'),
+            'performance': () => showNotification('Performance page - Coming soon!', 'info'),
+            'documents': () => window.location.href = '/document/',
+            'settings': () => showNotification('Settings page - Coming soon!', 'info')
+        };
+        
+        if (actions[page]) {
+            actions[page]();
+        }
+    }
+    
+    // Notification system
+    function showNotification(message, type = 'info') {
+        const notification = document.createElement('div');
+        notification.className = `notification notification-${type}`;
+        notification.innerHTML = `
+            <div class="notification-content">
+                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
+                <span>${message}</span>
+            </div>
+            <button class="notification-close">
+                <i class="fas fa-times"></i>
+            </button>
+        `;
+        
+        // Add notification styles
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--card-color);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+            box-shadow: 0 8px 25px var(--shadow-color);
+            z-index: 1000;
+            max-width: 300px;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+        `;
+        
+        const closeBtn = notification.querySelector('.notification-close');
+        closeBtn.style.cssText = `
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 4px;
+            margin-left: 12px;
+        `;
+        
+        const content = notification.querySelector('.notification-content');
+        content.style.cssText = `
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-primary);
+            font-size: 14px;
+        `;
+        
+        document.body.appendChild(notification);
+        
+        // Animate in
+        setTimeout(() => {
+            notification.style.transform = 'translateX(0)';
+        }, 100);
+        
+        // Auto remove after 4 seconds
+        const autoRemove = setTimeout(() => {
+            removeNotification(notification);
+        }, 4000);
+        
+        // Manual close
+        closeBtn.addEventListener('click', () => {
+            clearTimeout(autoRemove);
+            removeNotification(notification);
+        });
+    }
+    
+    function removeNotification(notification) {
+        notification.style.transform = 'translateX(100%)';
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+            }
+        }, 300);
+    }
+    
+    // Quick action buttons
+    const quickActionBtns = document.querySelectorAll('.quick-action-btn');
+    quickActionBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const btnText = this.textContent.trim();
+            showNotification(`${btnText} - Feature coming soon!`, 'info');
+        });
+    });
+    
+    // Animate metrics on page load
+    animateMetrics();
+    
+    function animateMetrics() {
+        const metricValues = document.querySelectorAll('.metric-value');
+        
+        metricValues.forEach((element, index) => {
+            const finalValue = element.textContent;
+            const isPercentage = finalValue.includes('%');
+            const isDollar = finalValue.includes('$');
+            
+            let numericValue;
+            if (isDollar) {
+                numericValue = parseFloat(finalValue.replace(/[$,]/g, ''));
+            } else {
+                numericValue = parseFloat(finalValue.replace(/[^0-9.]/g, ''));
+            }
+            
+            let currentValue = 0;
+            const increment = numericValue / 50;
+            const timer = setInterval(() => {
+                currentValue += increment;
+                if (currentValue >= numericValue) {
+                    currentValue = numericValue;
+                    clearInterval(timer);
+                }
+                
+                if (isDollar) {
+                    element.textContent = '$' + Math.floor(currentValue).toLocaleString();
+                } else if (isPercentage) {
+                    element.textContent = currentValue.toFixed(1) + '%';
+                } else {
+                    element.textContent = Math.floor(currentValue);
+                }
+            }, 20);
+            
+            // Delay animation for each metric
+            setTimeout(() => {
+                // Animation starts automatically
+            }, index * 200);
+        });
+    }
+    
+    console.log('Professional Dashboard initialized successfully');
+});

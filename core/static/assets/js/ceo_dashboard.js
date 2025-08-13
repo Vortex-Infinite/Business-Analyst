@@ -93,7 +93,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         localStorage.removeItem('theme');
                         showExecutiveNotification('Secure logout completed', 'success');
                         setTimeout(() => {
-                            window.location.href = '/';
+                            window.location.href = '/logout/';
                         }, 1500);
                     } catch (error) {
                         console.error('Logout error:', error);
@@ -516,4 +516,26 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Executive Notification System
     function showExecutiveNotification(message, type = 'info') {
-        const notification
+        const notification = document.createElement('div');
+        notification.className = `executive-notification ${type}`;
+        notification.innerHTML = `
+            <div class="notification-content">
+                <i class="fas fa-info-circle"></i>
+                <span>${message}</span>
+            </div>
+        `;
+        
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            notification.classList.add('show');
+        }, 100);
+        
+        setTimeout(() => {
+            notification.classList.remove('show');
+            setTimeout(() => {
+                document.body.removeChild(notification);
+            }, 300);
+        }, 3000);
+    }
+});

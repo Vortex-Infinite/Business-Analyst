@@ -1,0 +1,262 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ORBIS - Business Analytics</title>
+    <link rel="stylesheet" href="{% static 'assets/css/dashboard_style.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="analytics-page">
+    <!-- Enhanced Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo-container">
+                <div class="logo-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <div class="sidebar-logo">ORBIS</div>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <div class="nav-section">
+                <div class="nav-section-title">OVERVIEW</div>
+                <a href="#" class="nav-item" data-page="dashboard">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="#" class="nav-item active" data-page="analytics">
+                    <i class="fas fa-chart-pie"></i>
+                    <span>Analytics</span>
+                </a>
+                <a href="#" class="nav-item" data-page="reports">
+                    <i class="fas fa-file-alt"></i>
+                    <span>Reports</span>
+                </a>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-section-title">BUSINESS</div>
+                <a href="#" class="nav-item" data-page="projects">
+                    <i class="fas fa-project-diagram"></i>
+                    <span>Projects</span>
+                </a>
+                <a href="#" class="nav-item" data-page="finance">
+                    <i class="fas fa-dollar-sign"></i>
+                    <span>Finance</span>
+                </a>
+                <a href="#" class="nav-item" data-page="clients">
+                    <i class="fas fa-users"></i>
+                    <span>Clients</span>
+                </a>
+                <a href="#" class="nav-item" data-page="performance">
+                    <i class="fas fa-trophy"></i>
+                    <span>Performance</span>
+                </a>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-section-title">TOOLS</div>
+                <a href="#" class="nav-item" data-page="documents">
+                    <i class="fas fa-folder"></i>
+                    <span>Documents</span>
+                </a>
+                <a href="#" class="nav-item" data-page="settings">
+                    <i class="fas fa-cog"></i>
+                    <span>Settings</span>
+                </a>
+            </div>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="theme-switch-container">
+                <label class="theme-switch" for="theme-checkbox">
+                    <input type="checkbox" id="theme-checkbox">
+                    <div class="slider round"></div>
+                </label>
+                <div class="theme-label">Dark Mode</div>
+            </div>
+            <div class="logout-container">
+                <a href="{% url 'core:logout' %}" class="logout-btn">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="dashboard-container">
+        <!-- Top Navigation -->
+        <header class="dashboard-header">
+            <div class="header-left">
+                <button class="menu-toggle" id="menu-toggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div class="page-title">Analytics</div>
+            </div>
+            
+            <div class="header-right">
+                <div class="header-search">
+                    <input type="text" placeholder="Search...">
+                    <button><i class="fas fa-search"></i></button>
+                </div>
+                
+                <div class="header-actions">
+                    <button class="action-btn" id="notifications-btn">
+                        <i class="fas fa-bell"></i>
+                        <span class="badge">3</span>
+                    </button>
+                    
+                    <button class="profile-btn" id="profile-btn">
+                        <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="Profile">
+                        <div class="profile-info">
+                            <div class="name">John Analyst</div>
+                            <div class="email">john@orbis.com</div>
+                        </div>
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    
+                    <div class="profile-dropdown" id="profile-dropdown">
+                        <div class="dropdown-header">
+                            <div class="name">John Analyst</div>
+                            <div class="email">john@orbis.com</div>
+                        </div>
+                        <div class="dropdown-section">
+                            <a href="#" class="dropdown-item">
+                                <i class="fas fa-user"></i>
+                                Profile Settings
+                            </a>
+                            <a href="#" class="dropdown-item">
+                                <i class="fas fa-cog"></i>
+                                Preferences
+                            </a>
+                            <a href="#" class="dropdown-item">
+                                <i class="fas fa-question-circle"></i>
+                                Help & Support
+                            </a>
+                        </div>
+                        <div class="dropdown-section">
+                            <button class="dropdown-item logout-btn" id="logout-btn">
+                                <i class="fas fa-sign-out-alt"></i>
+                                Logout
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Dashboard Content -->
+        <main class="dashboard-content">
+            <div class="dashboard-overview">
+                <div class="overview-card">
+                    <div class="overview-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="overview-data">
+                        <div class="overview-value">{{ yearly_summaries.0.total_revenue|floatformat:0 }}</div>
+                        <div class="overview-label">Annual Revenue</div>
+                    </div>
+                    <div class="overview-trend positive">
+                        <i class="fas fa-arrow-up"></i>
+                        <span>12.5%</span>
+                    </div>
+                </div>
+                
+                <div class="overview-card">
+                    <div class="overview-icon">
+                        <i class="fas fa-dollar-sign"></i>
+                    </div>
+                    <div class="overview-data">
+                        <div class="overview-value">{{ yearly_summaries.0.total_profit|floatformat:0 }}</div>
+                        <div class="overview-label">Annual Profit</div>
+                    </div>
+                    <div class="overview-trend positive">
+                        <i class="fas fa-arrow-up"></i>
+                        <span>8.3%</span>
+                    </div>
+                </div>
+                
+                <div class="overview-card">
+                    <div class="overview-icon">
+                        <i class="fas fa-percentage"></i>
+                    </div>
+                    <div class="overview-data">
+                        <div class="overview-value">{{ yearly_summaries.0.avg_profit_margin|floatformat:1 }}%</div>
+                        <div class="overview-label">Profit Margin</div>
+                    </div>
+                    <div class="overview-trend positive">
+                        <i class="fas fa-arrow-up"></i>
+                        <span>2.1%</span>
+                    </div>
+                </div>
+                
+                <div class="overview-card">
+                    <div class="overview-icon">
+                        <i class="fas fa-calendar-check"></i>
+                    </div>
+                    <div class="overview-data">
+                        <div class="overview-value">{{ yearly_summaries.0.year }}</div>
+                        <div class="overview-label">Fiscal Year</div>
+                    </div>
+                    <div class="overview-trend neutral">
+                        <i class="fas fa-minus"></i>
+                        <span>Current</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="widget-grid">
+                <!-- Yearly Performance -->
+                <div class="widget">
+                    <div class="widget-header">
+                        <div class="title">Yearly Performance Comparison</div>
+                        <div class="widget-actions">
+                            <button class="action-btn">
+                                <i class="fas fa-download"></i>
+                            </button>
+                            <button class="action-btn">
+                                <i class="fas fa-expand"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="widget-content">
+                        <canvas id="yearlyComparisonChart" width="400" height="200"></canvas>
+                    </div>
+                </div>
+
+                <!-- Seasonal Analysis -->
+                <div class="widget">
+                    <div class="widget-header">
+                        <div class="title">Seasonal Analysis</div>
+                        <div class="widget-actions">
+                            <button class="action-btn">
+                                <i class="fas fa-download"></i>
+                            </button>
+                            <button class="action-btn">
+                                <i class="fas fa-expand"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="widget-content">
+                        <canvas id="seasonalAnalysisChart" width="400" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <div class="dashboard-footer">
+            <div class="powered-by">
+                Powered by <strong>ORBIS Analytics</strong> &copy; 2025
+            </div>
+        </div>
+    </div>
+
+    <script src="{% static 'assets/js/dashboard.js' %}"></script>
+</body>
+</html>

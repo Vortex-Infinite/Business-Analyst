@@ -16,4 +16,5 @@ urlpatterns = [
     
     # API endpoints
     path('api/financial-data/', views.api_financial_data, name='api_financial_data'),
+    path('api/dashboard-metrics/', views.api_dashboard_metrics, name='api_dashboard_metrics'),
 ]

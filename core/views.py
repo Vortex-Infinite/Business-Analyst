@@ -191,9 +191,106 @@ def api_financial_data(request):
             'revenue': [float(item['revenue']) for item in data],
             'profit': [float(item['profit']) for item in data],
             'profit_margin': [float(item['profit_margin']) for item in data],
+            'last_updated': timezone.now().isoformat(),
+            'total_records': len(data),
         }
         
+        # Add summary statistics
+        if data:
+            revenues = [float(item['revenue']) for item in data]
+            profits = [float(item['profit']) for item in data]
+            margins = [float(item['profit_margin']) for item in data]
+            
+            chart_data.update({
+                'summary': {
+                    'total_revenue': sum(revenues),
+                    'avg_revenue': sum(revenues) / len(revenues),
+                    'max_revenue': max(revenues),
+                    'min_revenue': min(revenues),
+                    'total_profit': sum(profits),
+                    'avg_profit': sum(profits) / len(profits),
+                    'avg_margin': sum(margins) / len(margins),
+                }
+            })
+        
         return JsonResponse(chart_data)
+        
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=400)
+
+@login_required
+def api_dashboard_metrics(request):
+    """API endpoint for dashboard metrics refresh"""
+    company = Company.objects.first()
+    
+    try:
+        # Get latest data
+        latest_data = DailyFinancialData.objects.filter(company=company).first()
+        
+        # Get current year stats
+        current_year = timezone.now().date().year
+        current_year_stats = DailyFinancialData.objects.filter(
+            company=company,
+            year=current_year
+        ).aggregate(
+            total_revenue=Sum('revenue'),
+            total_profit=Sum('profit'),
+            avg_profit_margin=Avg('profit_margin'),
+            record_count=Count('id')
+        )
+        
+        # Get this month's stats
+        current_month = timezone.now().date().replace(day=1)
+        month_stats = DailyFinancialData.objects.filter(
+            company=company,
+            date__gte=current_month
+        ).aggregate(
+            monthly_revenue=Sum('revenue'),
+            monthly_profit=Sum('profit'),
+            monthly_avg_margin=Avg('profit_margin')
+        )
+        
+        # Recent performance (last 7 days)
+        week_ago = timezone.now().date() - timedelta(days=7)
+        recent_performance = DailyFinancialData.objects.filter(
+            company=company,
+            date__gte=week_ago
+        ).aggregate(
+            week_revenue=Sum('revenue'),
+            week_profit=Sum('profit'),
+            best_day_revenue=Max('revenue'),
+            worst_day_revenue=Min('revenue')
+        )
+        
+        metrics_data = {
+            'latest_data': {
+                'date': latest_data.date.isoformat() if latest_data else None,
+                'revenue': float(latest_data.revenue) if latest_data else 0,
+                'profit': float(latest_data.profit) if latest_data else 0,
+                'profit_margin': float(latest_data.profit_margin) if latest_data else 0,
+            },
+            'current_year': {
+                'total_revenue': float(current_year_stats['total_revenue'] or 0),
+                'total_profit': float(current_year_stats['total_profit'] or 0),
+                'avg_profit_margin': float(current_year_stats['avg_profit_margin'] or 0),
+                'record_count': current_year_stats['record_count'],
+            },
+            'current_month': {
+                'revenue': float(month_stats['monthly_revenue'] or 0),
+                'profit': float(month_stats['monthly_profit'] or 0),
+                'avg_margin': float(month_stats['monthly_avg_margin'] or 0),
+            },
+            'recent_performance': {
+                'week_revenue': float(recent_performance['week_revenue'] or 0),
+                'week_profit': float(recent_performance['week_profit'] or 0),
+                'best_day': float(recent_performance['best_day_revenue'] or 0),
+                'worst_day': float(recent_performance['worst_day_revenue'] or 0),
+            },
+            'last_updated': timezone.now().isoformat(),
+            'company_name': company.name if company else 'N/A',
+        }
+        
+        return JsonResponse(metrics_data)
         
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=400)

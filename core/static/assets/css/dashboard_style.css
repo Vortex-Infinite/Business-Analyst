@@ -15,6 +15,7 @@
     --accent-color: #4299e1; /* Calm Blue */
     --accent-hover: #3182ce; /* Darker on hover */
     --accent-text: #ffffff;
+    --accent-light: rgba(66, 153, 225, 0.1); /* Light accent for backgrounds */
     
     /* Status Colors - Same as login pages */
     --success: #48bb78; /* Soft green */
@@ -48,6 +49,7 @@ body.dark-mode {
     --accent-color: #60a5fa; /* Brighter blue */
     --accent-hover: #3b82f6; /* Deeper blue hover */
     --accent-text: #0d0907; /* Crow */
+    --accent-light: rgba(96, 165, 250, 0.1); /* Light accent for dark mode */
     
     --success: #34d399; /* Bright Green */
     --warning: #fbbf24; /* Golden Yellow */

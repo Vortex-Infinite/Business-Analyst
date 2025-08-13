@@ -209,7 +209,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Add your page navigation logic here
         const actions = {
             'dashboard': () => console.log('Dashboard selected'),
-            'analytics': () => showNotification('Analytics page - Coming soon!', 'info'),
+            'analytics': () => window.location.href = '/analytics/',
             'reports': () => showNotification('Reports page - Coming soon!', 'info'),
             'projects': () => showNotification('Projects page - Coming soon!', 'info'),
             'finance': () => showNotification('Finance page - Coming soon!', 'info'),

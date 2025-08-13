@@ -76,45 +76,32 @@ def employee_login(request):
 
 @login_required
 def dashboard(request):
-    """Updated business analyst dashboard with current month focus"""
+    """Updated business analyst dashboard with daily data focus"""
     company = Company.objects.first()
     
     if not company:
         return render(request, 'dashboard.html', {'error': 'No company data found. Please import financial data first.'})
     
-    # Get current month and year
+    # Get current date (or most recent available date)
     current_date = timezone.now().date()
-    current_month = current_date.month
-    current_year = current_date.year
     
-    # Get current month data
-    current_month_data = DailyFinancialData.objects.filter(
+    # Get the most recent available date from the database
+    latest_data = DailyFinancialData.objects.filter(company=company).order_by('-date').first()
+    if latest_data:
+        current_date = latest_data.date
+    
+    # Get daily data for the current/recent date
+    daily_data_for_display = DailyFinancialData.objects.filter(
         company=company,
-        date__year=current_year,
-        date__month=current_month
-    ).order_by('date')
+        date=current_date
+    ).first()
     
-    # If no current month data, get the most recent month with data
-    if not current_month_data.exists():
-        latest_data = DailyFinancialData.objects.filter(company=company).order_by('-date').first()
-        if latest_data:
-            current_year = latest_data.date.year
-            current_month = latest_data.date.month
-            current_month_data = DailyFinancialData.objects.filter(
-                company=company,
-                date__year=current_year,
-                date__month=current_month
-            ).order_by('date')
-    
-    # Get previous month data for comparison
-    previous_month = current_month - 1 if current_month > 1 else 12
-    previous_year = current_year if current_month > 1 else current_year - 1
-    
-    previous_month_data = DailyFinancialData.objects.filter(
+    # Get previous day data for comparison
+    previous_date = current_date - timedelta(days=1)
+    previous_day_data = DailyFinancialData.objects.filter(
         company=company,
-        date__year=previous_year,
-        date__month=previous_month
-    ).order_by('date')
+        date=previous_date
+    ).first()
     
     # Get all historical data for total stats
     all_data = DailyFinancialData.objects.filter(company=company).order_by('date')
@@ -122,24 +109,39 @@ def dashboard(request):
     if not all_data.exists():
         return render(request, 'dashboard.html', {'error': 'No financial data found. Please import financial data first.'})
     
-    # Calculate current month stats
-    current_month_stats = current_month_data.aggregate(
-        total_revenue=Sum('revenue'),
-        total_expenditure=Sum('expenditure'),
-        total_profit=Sum('profit'),
-        avg_profit_margin=Avg('profit_margin'),
-        avg_daily_revenue=Avg('revenue'),
-        avg_daily_expenses=Avg('expenditure'),
-        avg_daily_profit=Avg('profit')
-    )
+    # Calculate daily stats (for the specific day)
+    if daily_data_for_display:
+        daily_stats = {
+            'revenue': daily_data_for_display.revenue,
+            'expenditure': daily_data_for_display.expenditure,
+            'profit': daily_data_for_display.profit,
+            'profit_margin': daily_data_for_display.profit_margin,
+            'free_cash_flow': daily_data_for_display.free_cash_flow
+        }
+    else:
+        daily_stats = {
+            'revenue': 0,
+            'expenditure': 0,
+            'profit': 0,
+            'profit_margin': 0,
+            'free_cash_flow': 0
+        }
     
-    # Calculate previous month stats
-    previous_month_stats = previous_month_data.aggregate(
-        total_revenue=Sum('revenue'),
-        total_expenditure=Sum('expenditure'),
-        total_profit=Sum('profit'),
-        avg_profit_margin=Avg('profit_margin')
-    )
+    # Calculate previous day stats
+    if previous_day_data:
+        previous_stats = {
+            'revenue': previous_day_data.revenue,
+            'expenditure': previous_day_data.expenditure,
+            'profit': previous_day_data.profit,
+            'profit_margin': previous_day_data.profit_margin
+        }
+    else:
+        previous_stats = {
+            'revenue': 0,
+            'expenditure': 0,
+            'profit': 0,
+            'profit_margin': 0
+        }
     
     # Calculate total historical stats
     total_stats = all_data.aggregate(
@@ -151,30 +153,30 @@ def dashboard(request):
         min_revenue=Min('revenue')
     )
     
-    # Calculate trends (current month vs previous month)
+    # Calculate trends (current day vs previous day)
     revenue_trend = 0
     expense_trend = 0
     profit_trend = 0
     margin_trend = 0
     
-    if previous_month_stats['total_revenue'] and current_month_stats['total_revenue']:
-        revenue_trend = ((current_month_stats['total_revenue'] - previous_month_stats['total_revenue']) / previous_month_stats['total_revenue']) * 100
+    if previous_stats['revenue'] and daily_stats['revenue']:
+        revenue_trend = ((daily_stats['revenue'] - previous_stats['revenue']) / previous_stats['revenue']) * 100
     
-    if previous_month_stats['total_expenditure'] and current_month_stats['total_expenditure']:
-        expense_trend = ((current_month_stats['total_expenditure'] - previous_month_stats['total_expenditure']) / previous_month_stats['total_expenditure']) * 100
+    if previous_stats['expenditure'] and daily_stats['expenditure']:
+        expense_trend = ((daily_stats['expenditure'] - previous_stats['expenditure']) / previous_stats['expenditure']) * 100
     
-    if previous_month_stats['total_profit'] and current_month_stats['total_profit']:
-        profit_trend = ((current_month_stats['total_profit'] - previous_month_stats['total_profit']) / previous_month_stats['total_profit']) * 100
+    if previous_stats['profit'] and daily_stats['profit']:
+        profit_trend = ((daily_stats['profit'] - previous_stats['profit']) / previous_stats['profit']) * 100
     
-    if previous_month_stats['avg_profit_margin'] and current_month_stats['avg_profit_margin']:
-        margin_trend = current_month_stats['avg_profit_margin'] - previous_month_stats['avg_profit_margin']
+    if previous_stats['profit_margin'] and daily_stats['profit_margin']:
+        margin_trend = daily_stats['profit_margin'] - previous_stats['profit_margin']
     
-    # Enhanced performance stats with current month focus
+    # Enhanced performance stats with daily focus
     performance_stats = {
         'total_revenue': total_stats['total_revenue'] or 0,
         'total_expenditure': total_stats['total_expenditure'] or 0,
         'total_profit': total_stats['total_profit'] or 0,
-        'actual_profit': current_month_stats['total_profit'] or 0,
+        'actual_profit': daily_stats['profit'] or 0,
         'avg_profit_margin': total_stats['avg_profit_margin'] or 0,
         'max_revenue': total_stats['max_revenue'] or 0,
         'min_revenue': total_stats['min_revenue'] or 0,
@@ -182,16 +184,21 @@ def dashboard(request):
         'expense_trend': round(expense_trend, 1) if expense_trend else 0,
         'profit_trend': round(profit_trend, 1) if profit_trend else 0,
         'margin_trend': round(margin_trend, 1) if margin_trend else 0,
-        'monthly_revenue': current_month_stats['total_revenue'] or 0,
-        'monthly_expenses': current_month_stats['total_expenditure'] or 0,
-        'monthly_profit': current_month_stats['total_profit'] or 0,
-        'roi': round((current_month_stats['total_profit'] / current_month_stats['total_expenditure'] * 100), 1) if current_month_stats['total_expenditure'] else 0
+        'daily_revenue': daily_stats['revenue'] or 0,
+        'daily_expenses': daily_stats['expenditure'] or 0,
+        'daily_profit': daily_stats['profit'] or 0,
+        'roi': round((daily_stats['profit'] / daily_stats['expenditure'] * 100), 1) if daily_stats['expenditure'] else 0
     }
     
-    # Prepare daily data for charts (current month)
-    daily_data = []
-    for data in current_month_data[:20]:  # Last 20 days of current month
-        daily_data.append({
+    # Get recent daily data for charts (last 20 days)
+    recent_daily_data = DailyFinancialData.objects.filter(
+        company=company
+    ).order_by('-date')[:20]
+    
+    # Prepare daily data for charts (JSON serializable)
+    daily_data_for_charts = []
+    for data in reversed(recent_daily_data):  # Reverse to get chronological order
+        daily_data_for_charts.append({
             'date': data.date.strftime('%Y-%m-%d'),  # Convert to string for JSON
             'revenue': float(data.revenue),
             'expenditure': float(data.expenditure),
@@ -201,7 +208,7 @@ def dashboard(request):
     
     # Prepare daily data for template (with date objects for template formatting)
     daily_data_for_template = []
-    for data in current_month_data[:20]:  # Last 20 days of current month
+    for data in recent_daily_data:
         daily_data_for_template.append({
             'date': data.date,  # Keep as date object for template
             'revenue': float(data.revenue),
@@ -214,30 +221,28 @@ def dashboard(request):
     first_date = all_data.first().date
     last_date = all_data.last().date
     
-    # Create a date object for the displayed month
-    displayed_month_date = datetime(current_year, current_month, 1).date()
-    
-    # Prepare context with current month focus
+    # Prepare context with daily focus
     context = {
         'company': company,
-        'recent_data': current_month_data,
+        'recent_data': recent_daily_data,
         'performance_stats': performance_stats,
-        'trend_data': json.dumps(daily_data[::-1]),  # Reverse for chronological order
+        'trend_data': json.dumps(daily_data_for_charts),  # JSON serializable data
         
-        # Current month data (main focus)
-        'total_revenue': current_month_stats['total_revenue'] or 0,
-        'total_expenses': current_month_stats['total_expenditure'] or 0,
-        'total_profit': current_month_stats['total_profit'] or 0,
-        'recent_revenue': current_month_stats['total_revenue'] or 0,
-        'recent_expenses': current_month_stats['total_expenditure'] or 0,
-        'recent_profit': current_month_stats['total_profit'] or 0,
-        'avg_daily_revenue': round(current_month_stats['avg_daily_revenue'] or 0, 2),
-        'avg_daily_expenses': round(current_month_stats['avg_daily_expenses'] or 0, 2),
-        'avg_daily_profit': round(current_month_stats['avg_daily_profit'] or 0, 2),
-        'daily_data': daily_data_for_template, # Use the daily_data_for_template for template
-        'data_period': f"Displayed Month ({displayed_month_date.strftime('%B %Y')})",
-        'current_month': displayed_month_date.strftime('%B %Y'),
-        'historical_period': f"{first_date.strftime('%B %Y')} - {last_date.strftime('%B %Y')}"
+        # Daily data (main focus)
+        'total_revenue': daily_stats['revenue'] or 0,
+        'total_expenses': daily_stats['expenditure'] or 0,
+        'total_profit': daily_stats['profit'] or 0,
+        'recent_revenue': daily_stats['revenue'] or 0,
+        'recent_expenses': daily_stats['expenditure'] or 0,
+        'recent_profit': daily_stats['profit'] or 0,
+        'avg_daily_revenue': daily_stats['revenue'] or 0,  # This is now the daily revenue
+        'avg_daily_expenses': daily_stats['expenditure'] or 0,  # This is now the daily expenses
+        'avg_daily_profit': daily_stats['profit'] or 0,  # This is now the daily profit
+        'daily_data': daily_data_for_template,
+        'data_period': f"Daily Data ({current_date.strftime('%B %d, %Y')})",
+        'current_month': current_date.strftime('%B %d, %Y'),
+        'historical_period': f"{first_date.strftime('%B %Y')} - {last_date.strftime('%B %Y')}",
+        'display_date': current_date
     }
     
     return render(request, 'dashboard.html', context)

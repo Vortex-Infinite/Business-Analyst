@@ -242,24 +242,24 @@
                     <div class="widget-content">
                         <div class="financial-summary">
                             <div class="summary-item">
-                                <div class="summary-label">Current Month Revenue ({{ current_month }})</div>
+                                <div class="summary-label">Daily Revenue ({{ current_month }})</div>
                                 <div class="summary-value">₹{{ recent_revenue|floatformat:0|default:"0" }}</div>
-                                <div class="summary-trend positive">Current month data</div>
+                                <div class="summary-trend positive">Daily data</div>
                             </div>
                             <div class="summary-item">
-                                <div class="summary-label">Current Month Expenses ({{ current_month }})</div>
+                                <div class="summary-label">Daily Expenses ({{ current_month }})</div>
                                 <div class="summary-value">₹{{ recent_expenses|floatformat:0|default:"0" }}</div>
-                                <div class="summary-trend neutral">Current month data</div>
+                                <div class="summary-trend neutral">Daily data</div>
                             </div>
                             <div class="summary-item">
-                                <div class="summary-label">Current Month Profit ({{ current_month }})</div>
+                                <div class="summary-label">Daily Profit ({{ current_month }})</div>
                                 <div class="summary-value">₹{{ recent_profit|floatformat:0|default:"0" }}</div>
-                                <div class="summary-trend positive">Current month data</div>
+                                <div class="summary-trend positive">Daily data</div>
                             </div>
                             <div class="summary-item">
-                                <div class="summary-label">Avg Daily Revenue ({{ current_month }})</div>
+                                <div class="summary-label">Daily Revenue ({{ current_month }})</div>
                                 <div class="summary-value">₹{{ avg_daily_revenue|floatformat:0|default:"0" }}</div>
-                                <div class="summary-trend positive">Current month data</div>
+                                <div class="summary-trend positive">Daily data</div>
                             </div>
                         </div>
                     </div>
@@ -269,7 +269,7 @@
                 {% if daily_data %}
                 <div class="widget">
                     <div class="widget-header">
-                        <div class="title">Current Month Daily Financial Data ({{ current_month }})</div>
+                        <div class="title">Recent Daily Financial Data (Last 20 Days)</div>
                     </div>
                     <div class="widget-content">
                         <div class="daily-data-table">
@@ -301,7 +301,7 @@
                     </div>
                     <div class="widget-content">
                         <div class="analytics-info">
-                            <p><strong>Current Dashboard:</strong> Shows {{ current_month }} data with trends vs previous month</p>
+                            <p><strong>Current Dashboard:</strong> Shows daily data for {{ current_month }} with trends vs previous day</p>
                             <p><strong>Data Period:</strong> {{ data_period }} ({{ historical_period }})</p>
                             <p><strong>Analytics Page:</strong> View detailed monthly, quarterly, and yearly breakdowns</p>
                             <a href="{% url 'analytics' %}" class="btn-primary">View Detailed Analytics</a>

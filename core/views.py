@@ -94,6 +94,18 @@ def dashboard(request):
         date__month=current_month
     ).order_by('date')
     
+    # If no current month data, get the most recent month with data
+    if not current_month_data.exists():
+        latest_data = DailyFinancialData.objects.filter(company=company).order_by('-date').first()
+        if latest_data:
+            current_year = latest_data.date.year
+            current_month = latest_data.date.month
+            current_month_data = DailyFinancialData.objects.filter(
+                company=company,
+                date__year=current_year,
+                date__month=current_month
+            ).order_by('date')
+    
     # Get previous month data for comparison
     previous_month = current_month - 1 if current_month > 1 else 12
     previous_year = current_year if current_month > 1 else current_year - 1
@@ -180,7 +192,18 @@ def dashboard(request):
     daily_data = []
     for data in current_month_data[:20]:  # Last 20 days of current month
         daily_data.append({
-            'date': data.date.strftime('%Y-%m-%d'),
+            'date': data.date.strftime('%Y-%m-%d'),  # Convert to string for JSON
+            'revenue': float(data.revenue),
+            'expenditure': float(data.expenditure),
+            'profit': float(data.profit),
+            'profit_margin': float(data.profit_margin)
+        })
+    
+    # Prepare daily data for template (with date objects for template formatting)
+    daily_data_for_template = []
+    for data in current_month_data[:20]:  # Last 20 days of current month
+        daily_data_for_template.append({
+            'date': data.date,  # Keep as date object for template
             'revenue': float(data.revenue),
             'expenditure': float(data.expenditure),
             'profit': float(data.profit),
@@ -190,6 +213,9 @@ def dashboard(request):
     # Get date range for display
     first_date = all_data.first().date
     last_date = all_data.last().date
+    
+    # Create a date object for the displayed month
+    displayed_month_date = datetime(current_year, current_month, 1).date()
     
     # Prepare context with current month focus
     context = {
@@ -208,9 +234,9 @@ def dashboard(request):
         'avg_daily_revenue': round(current_month_stats['avg_daily_revenue'] or 0, 2),
         'avg_daily_expenses': round(current_month_stats['avg_daily_expenses'] or 0, 2),
         'avg_daily_profit': round(current_month_stats['avg_daily_profit'] or 0, 2),
-        'daily_data': daily_data,
-        'data_period': f"Current Month ({current_date.strftime('%B %Y')})",
-        'current_month': current_date.strftime('%B %Y'),
+        'daily_data': daily_data_for_template, # Use the daily_data_for_template for template
+        'data_period': f"Displayed Month ({displayed_month_date.strftime('%B %Y')})",
+        'current_month': displayed_month_date.strftime('%B %Y'),
         'historical_period': f"{first_date.strftime('%B %Y')} - {last_date.strftime('%B %Y')}"
     }
     
@@ -391,6 +417,7 @@ def analytics(request):
                 monthly_data.append({
                     'month': f"{month:02d}",
                     'month_name': f"{month:02d}",
+                    'period': f"{month:02d}",  # Add period key for consistency
                     'revenue': float(month_data['revenue'] or 0),
                     'expenses': float(month_data['expenses'] or 0),
                     'profit': float(month_data['profit'] or 0),

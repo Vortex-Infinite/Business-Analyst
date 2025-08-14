@@ -1,0 +1,502 @@
+{% load static %}
+{% load currency_filters %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ORBIS - Business Analytics Dashboard</title>
+    <link rel="stylesheet" href="{% static 'assets/css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/css/dashboard_style.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Pass Django data to JavaScript
+        const trendData = '{{ trend_data|safe }}';
+    </script>
+</head>
+<body class="dashboard-page dark-mode">
+    <!-- Enhanced Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo-container">
+                <div class="logo-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <div class="sidebar-logo">ORBIS</div>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <div class="nav-section">
+                <div class="nav-section-title">OVERVIEW</div>
+                <a href="{% url 'dashboard' %}" class="nav-item active" data-page="dashboard">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="{% url 'analytics' %}" class="nav-item" data-page="analytics">
+                    <i class="fas fa-chart-pie"></i>
+                    <span>Analytics</span>
+                </a>
+                <a href="{% url 'transaction' %}" class="nav-item" data-page="transaction">
+                    <i class="fas fa-exchange-alt"></i>
+                    <span>Transaction</span>
+                </a>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-section-title">BUSINESS</div>
+                <a href="#" class="nav-item" data-page="finance">
+                    <i class="fas fa-dollar-sign"></i>
+                    <span>Finance</span>
+                </a>
+                <a href="#" class="nav-item" data-page="expenses">
+                    <i class="fas fa-receipt"></i>
+                    <span>Expenses</span>
+                </a>
+                <a href="#" class="nav-item" data-page="income">
+                    <i class="fas fa-money-bill-wave"></i>
+                    <span>Income Tracking</span>
+                </a>
+                <a href="#" class="nav-item" data-page="performance">
+                    <i class="fas fa-trophy"></i>
+                    <span>Performance</span>
+                </a>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-section-title">TOOLS</div>
+                <a href="#" class="nav-item" data-page="documents">
+                    <i class="fas fa-folder"></i>
+                    <span>Documents</span>
+                </a>
+                <a href="#" class="nav-item" data-page="settings">
+                    <i class="fas fa-cog"></i>
+                    <span>Settings</span>
+                </a>
+            </div>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="theme-switch-container">
+                <span class="theme-label">Dark Mode</span>
+                <label class="theme-switch" for="theme-checkbox">
+                    <input type="checkbox" id="theme-checkbox">
+                    <div class="slider round">
+                        <div class="knob">
+                            <i class="fas fa-sun"></i>
+                            <i class="fas fa-moon"></i>
+                        </div>
+                    </div>
+                </label>
+            </div>
+            <button class="sidebar-toggle" id="sidebar-toggle">
+                <i class="fas fa-chevron-left"></i>
+                <span>Collapse</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Content Wrapper -->
+    <div class="main-wrapper">
+        <!-- Enhanced Header -->
+        <header class="dashboard-header">
+            <div class="header-left">
+                <div class="header-title">
+                    {% if company %}
+                        {{ company.name }} - Business Analytics Dashboard
+                    {% else %}
+                        Business Analytics Dashboard
+                    {% endif %}
+                    <span id="live-time"></span>
+                </div>
+            </div>
+            <div class="header-actions">
+                <div class="notifications">
+                    <button class="notification-btn">
+                        <i class="fas fa-bell"></i>
+                        <span class="notification-badge">3</span>
+                    </button>
+                </div>
+                <div class="profile-container">
+                    <button class="profile-btn" id="profile-btn">
+                        <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="Profile">
+                        <div class="profile-info">
+                            <div class="name">Business Analyst</div>
+                            <div class="email">analyst@orbis.com</div>
+                        </div>
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    
+                    <div class="profile-dropdown" id="profile-dropdown">
+                        <div class="dropdown-header">
+                            <div class="name">Business Analyst</div>
+                            <div class="email">analyst@orbis.com</div>
+                        </div>
+                        <div class="dropdown-section">
+                            <a href="{% url 'profile_settings' %}" class="dropdown-item">
+                                <i class="fas fa-user"></i>
+                                Profile Settings
+                            </a>
+                            <a href="{% url 'preferences' %}" class="dropdown-item">
+                                <i class="fas fa-cog"></i>
+                                Preferences
+                            </a>
+                            <a href="{% url 'help_support' %}" class="dropdown-item">
+                                <i class="fas fa-question-circle"></i>
+                                Help & Support
+                            </a>
+                        </div>
+                        <div class="dropdown-section">
+                            <button class="dropdown-item logout-btn" id="logout-btn">
+                                <i class="fas fa-sign-out-alt"></i>
+                                Sign Out
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Dashboard Content -->
+        <main class="main-content">
+            <!-- Updated Key Metrics Row -->
+            <div class="metrics-row">
+                <div class="metric-card">
+                    <div class="metric-icon expenses">
+                        <i class="fas fa-receipt"></i>
+                    </div>
+                    <div class="metric-content">
+                        <div class="metric-value" id="total-expenses">{{ total_expenses|rupee_format }}</div>
+                        <div class="metric-label">Total Expenses</div>
+                        <div class="metric-change positive">
+                            <i class="fas fa-arrow-up"></i>
+                            Recent data loaded
+                        </div>
+                    </div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-icon total-income">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="metric-content">
+                        <div class="metric-value" id="total-revenue">{{ total_revenue|rupee_format }}</div>
+                        <div class="metric-label">Total Revenue</div>
+                        <div class="metric-change positive">
+                            <i class="fas fa-arrow-up"></i>
+                            Recent data loaded
+                        </div>
+                    </div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-icon actual-income">
+                        <i class="fas fa-money-bill-wave"></i>
+                    </div>
+                    <div class="metric-content">
+                        <div class="metric-value" id="total-profit">{{ total_profit|rupee_format }}</div>
+                        <div class="metric-label">Total Profit</div>
+                        <div class="metric-change positive">
+                            <i class="fas fa-arrow-up"></i>
+                            Recent data loaded
+                        </div>
+                    </div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-icon margin">
+                        <i class="fas fa-percentage"></i>
+                    </div>
+                    <div class="metric-content">
+                        <div class="metric-value" id="profit-margin">{{ performance_stats.avg_profit_margin|floatformat:1|default:"0" }}%</div>
+                        <div class="metric-label">Profit Margin</div>
+                        <div class="metric-change {% if performance_stats.margin_trend > 0 %}positive{% elif performance_stats.margin_trend < 0 %}negative{% else %}neutral{% endif %}">
+                            <i class="fas fa-arrow-{% if performance_stats.margin_trend > 0 %}up{% elif performance_stats.margin_trend < 0 %}down{% else %}right{% endif %}"></i>
+                            Dynamic calculation
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dashboard Grid -->
+            <div class="dash-grid">
+                <!-- Revenue Trend Chart -->
+                <div class="widget chart-widget">
+                    <div class="widget-header">
+                        <div class="title">Financial Performance Analysis</div>
+                        <div class="widget-actions">
+                            <button class="action-btn">
+                                <i class="fas fa-download"></i>
+                            </button>
+                            <button class="action-btn">
+                                <i class="fas fa-expand"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="widget-content">
+                        <canvas id="revenueChart" width="400" height="200"></canvas>
+                    </div>
+                </div>
+
+                <!-- Financial Summary -->
+                <div class="widget">
+                    <div class="widget-header">
+                        <div class="title">Financial Summary</div>
+                    </div>
+                    <div class="widget-content">
+                        <div class="financial-summary">
+                            <div class="summary-item">
+                                <div class="summary-label">Last Transaction Revenue ({{ last_transaction_date|date:"M d, Y" }})</div>
+                                <div class="summary-value">{{ last_transaction_revenue|rupee_format }}</div>
+                                <div class="summary-trend positive">Latest transaction</div>
+                            </div>
+                            <div class="summary-item">
+                                <div class="summary-label">Last Transaction Expenses ({{ last_transaction_date|date:"M d, Y" }})</div>
+                                <div class="summary-value">{{ last_transaction_expenses|rupee_format }}</div>
+                                <div class="summary-trend neutral">Latest transaction</div>
+                            </div>
+                            <div class="summary-item">
+                                <div class="summary-label">Last Transaction Profit ({{ last_transaction_date|date:"M d, Y" }})</div>
+                                <div class="summary-value">{{ last_transaction_profit|rupee_format }}</div>
+                                <div class="summary-trend positive">Latest transaction</div>
+                            </div>
+                            <div class="summary-item">
+                                <div class="summary-label">Daily Revenue ({{ current_month }})</div>
+                                <div class="summary-value">{{ avg_daily_revenue|rupee_format }}</div>
+                                <div class="summary-trend positive">Daily data</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Daily Data -->
+                {% if daily_data %}
+                <div class="widget">
+                    <div class="widget-header">
+                        <div class="title">Current Month Daily Financial Data ({{ current_month }})</div>
+                    </div>
+                    <div class="widget-content">
+                        <div class="daily-data-table">
+                            <div class="table-header">
+                                <div class="header-cell">Date</div>
+                                <div class="header-cell">Revenue</div>
+                                <div class="header-cell">Expenses</div>
+                                <div class="header-cell">Profit</div>
+                            </div>
+                            {% for data in daily_data %}
+                            <div class="table-row">
+                                <div class="table-cell">{{ data.date|date:"M d, Y" }}</div>
+                                <div class="table-cell">{{ data.revenue|rupee_format }}</div>
+                                <div class="table-cell">{{ data.expenditure|rupee_format }}</div>
+                                <div class="table-cell {% if data.profit >= 0 %}positive{% else %}negative{% endif %}">
+                                    {{ data.profit|rupee_format }}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Analytics Link -->
+                <div class="widget">
+                    <div class="widget-header">
+                        <div class="title">📊 Detailed Analytics</div>
+                    </div>
+                    <div class="widget-content">
+                        <div class="analytics-info">
+                            <p><strong>Current Dashboard:</strong> Shows daily data for {{ current_month }} with trends vs previous day</p>
+                            <p><strong>Latest Transaction:</strong> {{ last_transaction_date|date:"M d, Y" }} - {{ last_transaction_revenue|rupee_format }}</p>
+                            <p><strong>Data Period:</strong> {{ data_period }} ({{ historical_period }})</p>
+                            <p><strong>Analytics Page:</strong> View detailed monthly, quarterly, and yearly breakdowns</p>
+                            <a href="{% url 'analytics' %}" class="btn-primary">View Detailed Analytics</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Financial Activities -->
+                <div class="widget">
+                    <div class="widget-header">
+                        <div class="title">Recent Financial Activities</div>
+                    </div>
+                    <div class="widget-content">
+                        <div class="activity-feed">
+                            <div class="activity-item">
+                                <div class="activity-icon success">
+                                    <i class="fas fa-arrow-up"></i>
+                                </div>
+                                <div class="activity-content">
+                                    <div class="activity-text">Revenue increased by $25,000</div>
+                                    <div class="activity-time">2 hours ago</div>
+                                </div>
+                            </div>
+                            <div class="activity-item">
+                                <div class="activity-icon warning">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                </div>
+                                <div class="activity-content">
+                                    <div class="activity-text">High expense alert: Office supplies</div>
+                                    <div class="activity-time">4 hours ago</div>
+                                </div>
+                            </div>
+                            <div class="activity-item">
+                                <div class="activity-icon info">
+                                    <i class="fas fa-info-circle"></i>
+                                </div>
+                                <div class="activity-content">
+                                    <div class="activity-text">Monthly financial report generated</div>
+                                    <div class="activity-time">6 hours ago</div>
+                                </div>
+                            </div>
+                            <div class="activity-item">
+                                <div class="activity-icon success">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
+                                <div class="activity-content">
+                                    <div class="activity-text">Invoice payment received: $15,750</div>
+                                    <div class="activity-time">1 day ago</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Expense Categories -->
+                <div class="widget">
+                    <div class="widget-header">
+                        <div class="title">Expense Breakdown</div>
+                    </div>
+                    <div class="widget-content">
+                        <div class="expense-categories">
+                            <div class="expense-item">
+                                <div class="expense-info">
+                                    <span class="expense-name">Operations</span>
+                                    <span class="expense-amount">{{ operations_expense|rupee_format }}</span>
+                                </div>
+                                <div class="expense-progress">
+                                    <div class="progress-track">
+                                        <div class="progress-fill" style="width: 65%"></div>
+                                    </div>
+                                    <span class="progress-text">65%</span>
+                                </div>
+                            </div>
+                            
+                            <div class="expense-item">
+                                <div class="expense-info">
+                                    <span class="expense-name">Marketing</span>
+                                    <span class="expense-amount">{{ marketing_expense|rupee_format }}</span>
+                                </div>
+                                <div class="expense-progress">
+                                    <div class="progress-track">
+                                        <div class="progress-fill" style="width: 27%"></div>
+                                    </div>
+                                    <span class="progress-text">27%</span>
+                                </div>
+                            </div>
+
+                            <div class="expense-item">
+                                <div class="expense-info">
+                                    <span class="expense-name">Administrative</span>
+                                    <span class="expense-amount">{{ administrative_expense|rupee_format }}</span>
+                                </div>
+                                <div class="expense-progress">
+                                    <div class="progress-track">
+                                        <div class="progress-fill" style="width: 12%"></div>
+                                    </div>
+                                    <span class="progress-text">12%</span>
+                                </div>
+                            </div>
+
+                            <div class="expense-item">
+                                <div class="expense-info">
+                                    <span class="expense-name">Technology</span>
+                                    <span class="expense-amount">{{ technology_expense|rupee_format }}</span>
+                                </div>
+                                <div class="expense-progress">
+                                    <div class="progress-track">
+                                        <div class="progress-fill" style="width: 18%"></div>
+                                    </div>
+                                    <span class="progress-text">18%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Income Sources -->
+                <div class="widget">
+                    <div class="widget-header">
+                        <div class="title">Income Sources</div>
+                    </div>
+                    <div class="widget-content">
+                        <div class="income-sources">
+                            <div class="income-item">
+                                <div class="income-icon">
+                                    <i class="fas fa-handshake"></i>
+                                </div>
+                                <div class="income-content">
+                                    <div class="income-source">Service Revenue</div>
+                                    <div class="income-amount">{{ service_revenue|rupee_format }}</div>
+                                    <div class="income-percentage">68% of total income</div>
+                                </div>
+                            </div>
+
+                            <div class="income-item">
+                                <div class="income-icon">
+                                    <i class="fas fa-box"></i>
+                                </div>
+                                <div class="income-content">
+                                    <div class="income-source">Product Sales</div>
+                                    <div class="income-amount">{{ product_sales|rupee_format }}</div>
+                                    <div class="income-percentage">24% of total income</div>
+                                </div>
+                            </div>
+
+                            <div class="income-item">
+                                <div class="income-icon">
+                                    <i class="fas fa-chart-bar"></i>
+                                </div>
+                                <div class="income-content">
+                                    <div class="income-source">Consulting</div>
+                                    <div class="income-amount">{{ consulting_revenue|rupee_format }}</div>
+                                    <div class="income-percentage">8% of total income</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="widget">
+                    <div class="widget-header">
+                        <div class="title">Quick Financial Actions</div>
+                    </div>
+                    <div class="widget-content">
+                        <div class="quick-actions">
+                            <button class="quick-action-btn primary">
+                                <i class="fas fa-plus"></i>
+                                Add Expense
+                            </button>
+                            <button class="quick-action-btn secondary">
+                                <i class="fas fa-file-invoice"></i>
+                                Generate Invoice
+                            </button>
+                            <button class="quick-action-btn secondary">
+                                <i class="fas fa-chart-pie"></i>
+                                Financial Report
+                            </button>
+                            <button class="quick-action-btn secondary">
+                                <i class="fas fa-calculator"></i>
+                                Budget Planning
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="{% static 'assets/js/dashboard.js' %}"></script>
+</body>
+</html>

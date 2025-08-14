@@ -21,6 +21,11 @@ urlpatterns = [
     path('clear_session/', views.clear_session, name='clear_session'),
     path('document/', views.document, name='document'),
     
+    # Settings and Profile pages
+    path('profile_settings/', views.profile_settings, name='profile_settings'),
+    path('preferences/', views.preferences, name='preferences'),
+    path('help_support/', views.help_support, name='help_support'),
+    
     # API endpoints
     path('api/financial_data/', views.api_financial_data, name='api_financial_data'),
     path('api/transactions/', views.api_transactions, name='api_transactions'),

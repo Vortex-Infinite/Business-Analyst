@@ -1,0 +1,908 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ORBIS - Analytics Dashboard</title>
+    <link rel="stylesheet" href="{% static 'assets/css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/css/dashboard_style.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .analytics-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .analytics-header {
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--border-color);
+        }
+        
+        .analytics-header h1 {
+            color: var(--text-primary);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 2rem;
+        }
+        
+        .analytics-subheader {
+            color: var(--text-secondary);
+            margin-top: 0.5rem;
+            font-size: 1.1rem;
+        }
+        
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            background: linear-gradient(135deg, var(--primary-color), #5a7cfa);
+            color: white;
+            text-decoration: none;
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(64, 123, 255, 0.2);
+        }
+        
+        .back-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(64, 123, 255, 0.3);
+            color: white;
+            text-decoration: none;
+        }
+        
+        .back-button i {
+            font-size: 1.1rem;
+        }
+        
+        .controls-section {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border-color);
+        }
+        
+        .controls-header {
+            color: var(--text-primary);
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .controls-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            align-items: end;
+        }
+        
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .control-group label {
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+        }
+        
+        .control-group select {
+            padding: 0.75rem 1rem;
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .control-group select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(64, 123, 255, 0.1);
+        }
+        
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .summary-card {
+            background: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .summary-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--accent-color);
+        }
+        
+        .summary-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+        
+        .summary-card.revenue::before { background: #28a745; }
+        .summary-card.expenses::before { background: #dc3545; }
+        .summary-card.profit::before { background: #007bff; }
+        .summary-card.margin::before { background: #ffc107; }
+        .summary-card.roi::before { background: #6f42c1; }
+        
+        .card-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+            color: white;
+        }
+        
+        .summary-card.revenue .card-icon { background: #28a745; }
+        .summary-card.expenses .card-icon { background: #dc3545; }
+        .summary-card.profit .card-icon { background: #007bff; }
+        .summary-card.margin .card-icon { background: #ffc107; }
+        .summary-card.roi .card-icon { background: #6f42c1; }
+        
+        .summary-card h3 {
+            margin: 0 0 0.5rem 0;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        
+        .summary-card .value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin: 0;
+            color: var(--text-primary);
+        }
+        
+        .charts-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .chart-container {
+            background: var(--card-bg);
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border-color);
+        }
+        
+        .chart-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+        }
+        
+        .chart-title {
+            color: var(--text-primary);
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .chart-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .chart-action-btn {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            padding: 0.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .chart-action-btn:hover {
+            background: var(--hover-bg);
+            color: var(--text-primary);
+        }
+        
+        .chart-wrapper {
+            position: relative;
+            height: 300px;
+        }
+        
+        .data-table-section {
+            background: var(--card-bg);
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border-color);
+        }
+        
+        .table-header {
+            display: flex;
+            align-items: center;
+            justify-content: between;
+            margin-bottom: 1.5rem;
+        }
+        
+        .table-title {
+            color: var(--text-primary);
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+        
+        .data-table th,
+        .data-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .data-table th {
+            background: var(--table-header-bg);
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+        }
+        
+        .data-table tr:hover {
+            background: var(--hover-bg);
+        }
+        
+        .data-table td {
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+        
+        .data-table td:first-child {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+        
+        .positive { color: #28a745; font-weight: 600; }
+        .negative { color: #dc3545; font-weight: 600; }
+        .neutral { color: var(--text-secondary); font-weight: 600; }
+        
+        .error-message {
+            background: linear-gradient(135deg, #dc3545, #c82333);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        @media (max-width: 768px) {
+            .analytics-container {
+                padding: 1rem;
+            }
+            
+            .charts-section {
+                grid-template-columns: 1fr;
+            }
+            
+            .controls-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .summary-cards {
+                grid-template-columns: 1fr;
+            }
+            
+            .back-button {
+                padding: 0.75rem 1.25rem;
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body class="dashboard-page dark-mode">
+    <!-- Enhanced Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo-container">
+                <div class="logo-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <div class="sidebar-logo">ORBIS</div>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <div class="nav-section">
+                <div class="nav-section-title">OVERVIEW</div>
+                <a href="{% url 'dashboard' %}" class="nav-item" data-page="dashboard">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="{% url 'analytics' %}" class="nav-item active" data-page="analytics">
+                    <i class="fas fa-chart-pie"></i>
+                    <span>Analytics</span>
+                </a>
+                <a href="{% url 'transaction' %}" class="nav-item" data-page="transaction">
+                    <i class="fas fa-exchange-alt"></i>
+                    <span>Transaction</span>
+                </a>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-section-title">BUSINESS</div>
+                <a href="#" class="nav-item" data-page="finance">
+                    <i class="fas fa-dollar-sign"></i>
+                    <span>Finance</span>
+                </a>
+                <a href="#" class="nav-item" data-page="expenses">
+                    <i class="fas fa-receipt"></i>
+                    <span>Expenses</span>
+                </a>
+                <a href="#" class="nav-item" data-page="income">
+                    <i class="fas fa-money-bill-wave"></i>
+                    <span>Income Tracking</span>
+                </a>
+                <a href="#" class="nav-item" data-page="performance">
+                    <i class="fas fa-trophy"></i>
+                    <span>Performance</span>
+                </a>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-section-title">TOOLS</div>
+                <a href="#" class="nav-item" data-page="documents">
+                    <i class="fas fa-folder"></i>
+                    <span>Documents</span>
+                </a>
+                <a href="#" class="nav-item" data-page="settings">
+                    <i class="fas fa-cog"></i>
+                    <span>Settings</span>
+                </a>
+            </div>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="theme-switch-container">
+                <span class="theme-label">Dark Mode</span>
+                <label class="theme-switch" for="theme-checkbox">
+                    <input type="checkbox" id="theme-checkbox">
+                    <div class="slider round">
+                        <div class="knob">
+                            <i class="fas fa-sun"></i>
+                            <i class="fas fa-moon"></i>
+                        </div>
+                    </div>
+                </label>
+            </div>
+            <button class="sidebar-toggle" id="sidebar-toggle">
+                <i class="fas fa-chevron-left"></i>
+                <span>Collapse</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Content Wrapper -->
+    <div class="main-wrapper">
+        <!-- Enhanced Header -->
+        <header class="dashboard-header">
+            <div class="header-left">
+                <div class="header-title">
+                    {% if company %}
+                        {{ company.name }} - Analytics Dashboard
+                    {% else %}
+                        Analytics Dashboard
+                    {% endif %}
+                    <span id="live-time"></span>
+                </div>
+            </div>
+            <div class="header-actions">
+                <div class="notifications">
+                    <button class="notification-btn">
+                        <i class="fas fa-bell"></i>
+                        <span class="notification-badge">3</span>
+                    </button>
+                </div>
+                <div class="profile-container">
+                    <button class="profile-btn" id="profile-btn">
+                        <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="Profile">
+                        <div class="profile-info">
+                            <div class="name">Business Analyst</div>
+                            <div class="email">analyst@orbis.com</div>
+                        </div>
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    
+                    <div class="profile-dropdown" id="profile-dropdown">
+                        <div class="dropdown-header">
+                            <div class="name">Business Analyst</div>
+                            <div class="email">analyst@orbis.com</div>
+                        </div>
+                        <div class="dropdown-section">
+                            <a href="{% url 'profile_settings' %}" class="dropdown-item">
+                                <i class="fas fa-user"></i>
+                                Profile Settings
+                            </a>
+                            <a href="{% url 'preferences' %}" class="dropdown-item">
+                                <i class="fas fa-cog"></i>
+                                Preferences
+                            </a>
+                            <a href="{% url 'help_support' %}" class="dropdown-item">
+                                <i class="fas fa-question-circle"></i>
+                                Help & Support
+                            </a>
+                        </div>
+                        <div class="dropdown-section">
+                            <button class="dropdown-item logout-btn" id="logout-btn">
+                                <i class="fas fa-sign-out-alt"></i>
+                                Sign Out
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Analytics Content -->
+        <main class="main-content">
+            <div class="analytics-container">
+                <a href="{% url 'dashboard' %}" class="back-button">
+                    <i class="fas fa-arrow-left"></i>
+                    Back to Dashboard
+                </a>
+                
+                <div class="analytics-header">
+                    <h1>
+                        <i class="fas fa-chart-bar"></i>
+                        Financial Analytics
+                    </h1>
+                    <p class="analytics-subheader">
+                        {% if company %}
+                            Comprehensive analysis of {{ company.name }}'s financial performance
+                        {% else %}
+                            Comprehensive financial performance analysis
+                        {% endif %}
+                    </p>
+                </div>
+                
+                {% if error %}
+                    <div class="error-message">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        {{ error }}
+                    </div>
+                {% else %}
+                    <div class="controls-section">
+                        <h3 class="controls-header">
+                            <i class="fas fa-filter"></i>
+                            Analysis Controls
+                        </h3>
+                        <div class="controls-row">
+                            <div class="control-group">
+                                <label for="period">Analysis Period:</label>
+                                <select id="period" onchange="updateAnalytics()">
+                                    <option value="monthly" {% if period == 'monthly' %}selected{% endif %}>Monthly</option>
+                                    <option value="quarterly" {% if period == 'quarterly' %}selected{% endif %}>Quarterly</option>
+                                    <option value="yearly" {% if period == 'yearly' %}selected{% endif %}>Yearly</option>
+                                </select>
+                            </div>
+                            
+                            <div class="control-group">
+                                <label for="year">Year:</label>
+                                <select id="year" onchange="updateAnalytics()">
+                                    {% for y in all_years %}
+                                        <option value="{{ y }}" {% if y|stringformat:"s" == year %}selected{% endif %}>{{ y }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="summary-cards">
+                        <div class="summary-card revenue">
+                            <div class="card-icon">
+                                <i class="fas fa-rupee-sign"></i>
+                            </div>
+                            <h3>Total Revenue</h3>
+                            <p class="value">₹{{ summary.total_revenue|floatformat:0 }}</p>
+                        </div>
+                        <div class="summary-card expenses">
+                            <div class="card-icon">
+                                <i class="fas fa-receipt"></i>
+                            </div>
+                            <h3>Total Expenses</h3>
+                            <p class="value">₹{{ summary.total_expenses|floatformat:0 }}</p>
+                        </div>
+                        <div class="summary-card profit">
+                            <div class="card-icon">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            <h3>Total Profit</h3>
+                            <p class="value">₹{{ summary.total_profit|floatformat:0 }}</p>
+                        </div>
+                        <div class="summary-card margin">
+                            <div class="card-icon">
+                                <i class="fas fa-percentage"></i>
+                            </div>
+                            <h3>Avg Profit Margin</h3>
+                            <p class="value">{{ summary.avg_profit_margin }}%</p>
+                        </div>
+                        <div class="summary-card roi">
+                            <div class="card-icon">
+                                <i class="fas fa-trending-up"></i>
+                            </div>
+                            <h3>Avg ROI</h3>
+                            <p class="value">{{ summary.avg_roi }}%</p>
+                        </div>
+                    </div>
+                    
+                    <div class="charts-section">
+                        <div class="chart-container">
+                            <div class="chart-header">
+                                <h3 class="chart-title">
+                                    <i class="fas fa-chart-bar"></i>
+                                    Revenue vs Expenses
+                                </h3>
+                                <div class="chart-actions">
+                                    <button class="chart-action-btn" title="Download Chart">
+                                        <i class="fas fa-download"></i>
+                                    </button>
+                                    <button class="chart-action-btn" title="Fullscreen">
+                                        <i class="fas fa-expand"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="chart-wrapper">
+                                <canvas id="revenueExpensesChart"></canvas>
+                            </div>
+                        </div>
+                        
+                        <div class="chart-container">
+                            <div class="chart-header">
+                                <h3 class="chart-title">
+                                    <i class="fas fa-chart-line"></i>
+                                    Profit & ROI Trends
+                                </h3>
+                                <div class="chart-actions">
+                                    <button class="chart-action-btn" title="Download Chart">
+                                        <i class="fas fa-download"></i>
+                                    </button>
+                                    <button class="chart-action-btn" title="Fullscreen">
+                                        <i class="fas fa-expand"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="chart-wrapper">
+                                <canvas id="profitRoiChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="data-table-section">
+                        <div class="table-header">
+                            <h3 class="table-title">
+                                <i class="fas fa-table"></i>
+                                {{ period_label }} Data ({{ year }})
+                            </h3>
+                        </div>
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Period</th>
+                                    <th>Revenue</th>
+                                    <th>Expenses</th>
+                                    <th>Profit</th>
+                                    <th>Profit Margin</th>
+                                    <th>ROI</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in period_data %}
+                                <tr>
+                                    <td><strong>{{ item.period }}</strong></td>
+                                    <td class="positive">₹{{ item.revenue|floatformat:0 }}</td>
+                                    <td class="negative">₹{{ item.expenses|floatformat:0 }}</td>
+                                    <td class="{% if item.profit >= 0 %}positive{% else %}negative{% endif %}">
+                                        ₹{{ item.profit|floatformat:0 }}
+                                    </td>
+                                    <td class="{% if item.profit_margin >= 0 %}positive{% else %}negative{% endif %}">
+                                        {{ item.profit_margin }}%
+                                    </td>
+                                    <td class="{% if item.roi >= 0 %}positive{% else %}negative{% endif %}">
+                                        {{ item.roi }}%
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% endif %}
+            </div>
+        </main>
+    </div>
+    
+    <script src="{% static 'assets/js/dashboard.js' %}"></script>
+    <script>
+        function updateAnalytics() {
+            const period = document.getElementById('period').value;
+            const year = document.getElementById('year').value;
+            const url = `{% url 'analytics' %}?period=${period}&year=${year}`;
+            window.location.href = url;
+        }
+        
+        {% if chart_data %}
+        // Parse chart data
+        const chartData = {{ chart_data|safe }};
+        
+        // Revenue vs Expenses Chart
+        const revenueExpensesCtx = document.getElementById('revenueExpensesChart').getContext('2d');
+        new Chart(revenueExpensesCtx, {
+            type: 'bar',
+            data: {
+                labels: chartData.labels,
+                datasets: [
+                    {
+                        label: 'Revenue',
+                        data: chartData.revenue,
+                        backgroundColor: 'rgba(40, 167, 69, 0.8)',
+                        borderColor: 'rgba(40, 167, 69, 1)',
+                        borderWidth: 2,
+                        borderRadius: 6,
+                        borderSkipped: false,
+                    },
+                    {
+                        label: 'Expenses',
+                        data: chartData.expenses,
+                        backgroundColor: 'rgba(220, 53, 69, 0.8)',
+                        borderColor: 'rgba(220, 53, 69, 1)',
+                        borderWidth: 2,
+                        borderRadius: 6,
+                        borderSkipped: false,
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: {
+                            usePointStyle: true,
+                            padding: 20,
+                            font: {
+                                size: 12,
+                                weight: 600
+                            }
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        titleColor: 'white',
+                        bodyColor: 'white',
+                        borderColor: 'rgba(255, 255, 255, 0.1)',
+                        borderWidth: 1,
+                        cornerRadius: 8,
+                        displayColors: true,
+                        callbacks: {
+                            label: function(context) {
+                                return context.dataset.label + ': ₹' + context.parsed.y.toLocaleString();
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.1)',
+                            drawBorder: false
+                        },
+                        ticks: {
+                            callback: function(value) {
+                                return '₹' + value.toLocaleString();
+                            },
+                            font: {
+                                size: 11
+                            }
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            font: {
+                                size: 11,
+                                weight: 600
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Profit & ROI Chart
+        const profitRoiCtx = document.getElementById('profitRoiChart').getContext('2d');
+        new Chart(profitRoiCtx, {
+            type: 'line',
+            data: {
+                labels: chartData.labels,
+                datasets: [
+                    {
+                        label: 'Profit',
+                        data: chartData.profit,
+                        borderColor: 'rgba(0, 123, 255, 1)',
+                        backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: 'rgba(0, 123, 255, 1)',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointRadius: 6,
+                        pointHoverRadius: 8,
+                        yAxisID: 'y'
+                    },
+                    {
+                        label: 'ROI %',
+                        data: chartData.roi,
+                        borderColor: 'rgba(111, 66, 193, 1)',
+                        backgroundColor: 'rgba(111, 66, 193, 0.1)',
+                        borderWidth: 3,
+                        fill: false,
+                        tension: 0.4,
+                        pointBackgroundColor: 'rgba(111, 66, 193, 1)',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointRadius: 6,
+                        pointHoverRadius: 8,
+                        yAxisID: 'y1'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: {
+                            usePointStyle: true,
+                            padding: 20,
+                            font: {
+                                size: 12,
+                                weight: 600
+                            }
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        titleColor: 'white',
+                        bodyColor: 'white',
+                        borderColor: 'rgba(255, 255, 255, 0.1)',
+                        borderWidth: 1,
+                        cornerRadius: 8,
+                        displayColors: true,
+                        callbacks: {
+                            label: function(context) {
+                                if (context.datasetIndex === 0) {
+                                    return 'Profit: ₹' + context.parsed.y.toLocaleString();
+                                } else {
+                                    return 'ROI: ' + context.parsed.y + '%';
+                                }
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.1)',
+                            drawBorder: false
+                        },
+                        ticks: {
+                            callback: function(value) {
+                                return '₹' + value.toLocaleString();
+                            },
+                            font: {
+                                size: 11
+                            }
+                        }
+                    },
+                    y1: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        beginAtZero: true,
+                        grid: {
+                            drawOnChartArea: false,
+                        },
+                        ticks: {
+                            callback: function(value) {
+                                return value + '%';
+                            },
+                            font: {
+                                size: 11
+                            }
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            font: {
+                                size: 11,
+                                weight: 600
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        {% endif %}
+        
+        // Chart action buttons
+        document.querySelectorAll('.chart-action-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const icon = this.querySelector('i');
+                if (icon.classList.contains('fa-download')) {
+                    alert('Chart download feature will be implemented soon!');
+                } else if (icon.classList.contains('fa-expand')) {
+                    alert('Fullscreen view feature will be implemented soon!');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
+

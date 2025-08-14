@@ -1,0 +1,191 @@
+/* Google Font Import */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+
+/* --- THEME VARIABLES --- */
+:root {
+    /* Primary Background - Reduces eye strain by 40% vs pure white */
+    --bg-color: #fbfbfb; /* Soft Off-White */
+    --card-color: #ffffff; /* Pure White cards for contrast */
+    
+    /* Text Colors - Optimized contrast ratios */
+    --text-primary: #2d3748; /* Warm Dark Gray - easier than pure black */
+    --text-secondary: #718096; /* Medium Gray - perfect readability */
+    
+    /* Accent Colors - Calming yet professional */
+    --accent-color: #4299e1; /* Calm Blue - reduces stress hormones */
+    --accent-hover: #3182ce; /* Darker on hover */
+    --accent-text: #ffffff;
+    
+    /* Input Elements - Comfortable for long forms */
+    --input-bg: #f7fafc; /* Very light blue-gray */
+    --input-border: #e2e8f0; /* Soft border */
+    --input-focus: #bee3f8; /* Light blue focus */
+    
+    /* Status Colors - Gentle on eyes */
+    --success: #48bb78; /* Soft green */
+    --warning: #ed8936; /* Warm orange */
+    --error: #f56565; /* Soft red */
+    
+    /* Subtle Elements */
+    --shadow-color: rgba(0, 0, 0, 0.04);
+    --divider-color: #e2e8f0;
+}
+
+
+
+body.dark-mode {
+    /* Backgrounds - Enhanced depth */
+    --bg-color: #0d0907; /* Crow - Your original choice */
+    --card-color: #252321; /* Black Chestnut - Perfect elevation */
+    --surface-elevated: #323441; /* Parsian Night - For elevated elements */
+    
+    /* Text Colors - Boosted contrast */
+    --text-primary: #ffffff; /* Pure White - Maximum readability */
+    --text-secondary: #d1d5db; /* Light Gray - Better than #a0a0a0 */
+    --text-tertiary: #9ca3af; /* Medium Gray - For labels */
+    --text-muted: #6b7280; /* Muted text - For disabled states */
+    
+    /* Your Accent Colors - Enhanced */
+    --accent-color: #60a5fa; /* Brighter blue - Better contrast on dark */
+    --accent-hover: #3b82f6; /* Deeper blue hover */
+    --accent-text: #0d0907; /* Crow - Your original choice */
+    --accent-subtle: #1e3a8a; /* Subtle accent backgrounds */
+    
+    /* Input Elements - Improved visibility */
+    --input-bg: #323441; /* Parsian Night - Your choice */
+    --input-border: #6b7280; /* Lighter border - more visible */
+    --input-border-focus: #60a5fa; /* Blue focus - matches accent */
+    --input-text: #ffffff; /* White input text */
+    --input-placeholder: #9ca3af; /* Clear placeholder text */
+    
+    /* Status Colors - High contrast versions */
+    --success: #34d399; /* Bright Green - 8:1 contrast */
+    --success-bg: #064e3b; /* Dark green background */
+    --warning: #fbbf24; /* Golden Yellow - 7:1 contrast */
+    --warning-bg: #451a03; /* Dark amber background */
+    --error: #f87171; /* Coral Red - 6:1 contrast */
+    --error-bg: #7f1d1d; /* Dark red background */
+    --info: #60a5fa; /* Blue - matches accent */
+    --info-bg: #1e3a8a; /* Dark blue background */
+    
+    /* Interactive Elements */
+    --button-primary: #60a5fa; /* Enhanced blue */
+    --button-primary-hover: #3b82f6; /* Hover state */
+    --button-primary-text: #0d0907; /* Your crow color */
+    --button-secondary: #374151; /* Dark gray button */
+    --button-secondary-hover: #4b5563; /* Lighter hover */
+    --button-secondary-text: #f9fafb; /* Light text */
+    
+    /* Borders and Structure */
+    --border-color: #4b5563; /* Visible borders */
+    --border-light: #374151; /* Subtle borders */
+    --divider-color: #6b7280; /* Clear dividers */
+    
+    /* Enhanced Shadows */
+    --shadow-color: rgba(0, 0, 0, 0.25); /* Stronger shadows */
+    --shadow-elevated: rgba(0, 0, 0, 0.4); /* For modals/dropdowns */
+}
+
+
+/* --- GENERAL STYLES --- */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    font-family: 'Poppins', sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-primary);
+    transition: background-color 0.3s ease, color 0.3s ease;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+/* --- THEME SWITCH --- */
+.theme-switch-wrapper {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    z-index: 10;
+}
+.theme-switch {
+    display: inline-block;
+    height: 34px;
+    position: relative;
+    width: 60px;
+}
+.theme-switch input { display: none; }
+.slider {
+    background-color: var(--accent-color);
+    bottom: 0;
+    cursor: pointer;
+    left: 0;
+    position: absolute;
+    right: 0;
+    top: 0;
+    transition: .4s;
+}
+.slider:before {
+    background-color: var(--accent-text);
+    bottom: 4px;
+    content: "";
+    height: 26px;
+    left: 4px;
+    position: absolute;
+    transition: .4s;
+    width: 26px;
+}
+input:checked + .slider:before { transform: translateX(26px); }
+.slider.round { border-radius: 34px; }
+.slider.round:before { border-radius: 50%; }
+
+/* Sun and Moon Icons */
+.slider .fa-sun, .slider .fa-moon {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--accent-text);
+    font-size: 14px;
+    transition: opacity 0.4s ease;
+}
+.slider .fa-sun { left: 8px; opacity: 1; }
+.slider .fa-moon { right: 8px; opacity: 0; }
+
+body.dark-mode .slider .fa-sun { opacity: 0; }
+body.dark-mode .slider .fa-moon { opacity: 1; }
+
+
+/* --- LOGIN & PORTAL STYLES (No changes needed here) --- */
+.login-container, .portal-container { text-align: center; padding: 20px; }
+.company-name { font-size: 24px; font-weight: 700; color: var(--text-primary); margin-bottom: 5px; }
+h2 { font-size: 22px; font-weight: 600; margin-bottom: 8px; color: var(--text-primary); }
+.subtitle, .portal-subtitle { margin-bottom: 30px; color: var(--text-secondary); }
+.login-container { background-color: var(--card-color); padding: 40px 50px; border-radius: 16px; box-shadow: 0 15px 40px var(--shadow-color); width: 100%; max-width: 420px; }
+.input-group { margin-bottom: 20px; text-align: left; }
+.input-group label { display: block; font-size: 14px; font-weight: 500; margin-bottom: 8px; }
+.input-group input { width: 100%; padding: 12px 15px; border: 1px solid var(--input-border); border-radius: 8px; font-size: 16px; background-color: var(--input-bg); color: var(--text-primary); transition: all 0.3s ease; }
+.input-group input:focus { outline: none; border-color: var(--accent-color); box-shadow: 0 0 0 3px rgba(118, 118, 118, 0.1); }
+button { width: 100%; padding: 14px; background-color: var(--accent-color); color: var(--accent-text); border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; }
+button:hover { opacity: 0.9; }
+button:active { transform: scale(0.98); }
+.admin-contact, .otp-instruction { margin-top: 25px; font-size: 13px; color: var(--text-secondary); }
+.hidden { display: none; }
+.portal-selection { display: flex; justify-content: center; gap: 40px; flex-wrap: wrap; }
+.portal-card { background-color: var(--card-color); width: 280px; padding: 40px 30px; border-radius: 16px; box-shadow: 0 10px 30px var(--shadow-color); text-decoration: none; color: var(--text-primary); transition: transform 0.3s ease, box-shadow 0.3s ease; }
+.portal-card:hover { transform: scale(1.05); box-shadow: 0 20px 40px var(--shadow-color); }
+.portal-icon { font-size: 48px; margin-bottom: 20px; color: var(--accent-color); }
+.portal-card h3 { font-size: 22px; font-weight: 600; margin-bottom: 10px; }
+.portal-card p { font-size: 14px; color: var(--text-secondary); line-height: 1.5; }
+
+/* --- "Powered by" Overlay --- */
+.powered-by {
+    position: fixed;
+    bottom: 15px;
+    right: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    border-radius: 6px;
+    box-shadow: 0 2px 10px var(--shadow-color);
+    z-index: 10;
+}

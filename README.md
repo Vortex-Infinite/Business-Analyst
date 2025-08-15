@@ -138,6 +138,12 @@ python manage.py runserver
 
 Visit: `http://127.0.0.1:8000`
 
+           Or
+run the start_orbis.bat file and 
+
+Visit: `http://127.0.0.1:8000`
+
+
 ## 🎯 Usage
 
 ### Test Credentials

@@ -1,11 +1,62 @@
+# API endpoint for real-time transaction data
+from .models import Transaction, Account, AnomalyAlert
+from django.http import JsonResponse
+from django.contrib.auth.decorators import login_required
+
+@login_required
+def api_transactions(request):
+    """API endpoint for real-time transaction data"""
+    # Get recent transactions
+    transactions = Transaction.objects.all().order_by('-timestamp')[:20]
+    # Get account balance
+    try:
+        account = Account.objects.get(account_name="TechCorp Solutions")
+        balance = float(account.balance)
+    except Account.DoesNotExist:
+        balance = 0
+    # Get recent alerts
+    alerts = AnomalyAlert.objects.filter(status='ACTIVE').order_by('-created_at')[:5]
+    transaction_data = []
+    for transaction in transactions:
+        transaction_data.append({
+            'id': transaction.transaction_id,
+            'timestamp': transaction.timestamp.strftime('%Y-%m-%d %H:%M:%S'),
+            'amount': float(transaction.amount),
+            'sender': transaction.sender,
+            'receiver': transaction.receiver,
+            'balance': float(transaction.balance),
+            'is_anomaly': transaction.is_anomaly,
+            'anomaly_score': transaction.anomaly_score,
+            'time_ago': get_time_ago(transaction.timestamp)
+        })
+    alert_data = []
+    for alert in alerts:
+        alert_data.append({
+            'id': alert.id,
+            'type': alert.alert_type,
+            'severity': alert.severity,
+            'title': alert.title,
+            'description': alert.description,
+            'created_at': alert.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+            'time_ago': get_time_ago(alert.created_at)
+        })
+    return JsonResponse({
+        'transactions': transaction_data,
+        'alerts': alert_data,
+        'account_balance': balance,
+        'total_transactions': Transaction.objects.count(),
+        'anomaly_count': Transaction.objects.filter(is_anomaly=True).count()
+    })
 from django.shortcuts import render, redirect
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import authenticate, login, logout, get_user_model
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.db.models import Sum, Avg, Max, Min, Count
 from django.utils import timezone
 from datetime import datetime, timedelta
 import json
+from django.views.decorators.csrf import csrf_exempt
+from .otp_utils import create_otp_for_user, send_otp_email, verify_otp
 from .models import DailyFinancialData, Company, QuarterlySummary, UserProfile
 
 def index(request):
@@ -31,48 +82,93 @@ def index(request):
     return render(request, 'index.html', context)
 
 def hr_login(request):
-    """HR/Manager login with authentication and OTP verification"""
+    """CEO/HR login with 2-step OTP process (generate then verify)."""
+    User = get_user_model()
+    context = {}
     if request.method == 'POST':
-        username = request.POST.get('hrId')  # Manager email
-        password = request.POST.get('hrPassword')  # Manager password
-        otp = request.POST.get('hrOtp')  # OTP code
-        
-        # Check OTP first (demo OTP is 123456)
-        if otp != '123456':
-            return render(request, 'hr_login.html', {'error': 'Invalid OTP code. Use 123456 for demo.'})
-        
+        action = request.POST.get('action', 'login')
+        username = request.POST.get('hrId')
+        password = request.POST.get('hrPassword')
+        otp = request.POST.get('hrOtp')
+
+        # Step 1: Generate OTP
+        if action == 'generate_otp':
+            try:
+                user = User.objects.get(username=username)
+                # Authenticate password first before sending OTP
+                if not user.check_password(password):
+                    context['error'] = 'Invalid credentials'
+                else:
+                    otp_obj = create_otp_for_user(user)
+                    send_otp_email(user, otp_obj)
+                    context['otp_sent'] = True
+                    context['message'] = 'OTP sent to registered email.'
+            except User.DoesNotExist:
+                context['error'] = 'User not found'
+            context['prefill_username'] = username
+            return render(request, 'hr_login.html', context)
+
+        # Step 2: Verify OTP and login
         user = authenticate(request, username=username, password=password)
-        if user:
-            login(request, user)
-            # Set session timeout to 30 minutes for security
-            request.session.set_expiry(1800)
-            return redirect('ceo_dashboard')  # Manager goes to CEO dashboard
-        else:
-            return render(request, 'hr_login.html', {'error': 'Invalid credentials'})
-    
-    return render(request, 'hr_login.html')
+        if not user:
+            context['error'] = 'Invalid credentials'
+            return render(request, 'hr_login.html', context)
+        if not otp:
+            context['error'] = 'Enter OTP'
+            return render(request, 'hr_login.html', context)
+        if not verify_otp(user, otp):
+            context['error'] = 'Invalid or expired OTP'
+            context['otp_sent'] = True
+            context['prefill_username'] = username
+            return render(request, 'hr_login.html', context)
+        login(request, user)
+        request.session.set_expiry(1800)
+        return redirect('ceo_dashboard')
+    return render(request, 'hr_login.html', context)
 
 def employee_login(request):
-    """Employee/Analyst login with authentication and OTP verification"""
+    """Analyst login with 2-step OTP (generate + verify)."""
+    User = get_user_model()
+    context = {}
     if request.method == 'POST':
-        username = request.POST.get('employeeId')  # Analyst email
-        password = request.POST.get('employeePassword')  # Analyst password
-        otp = request.POST.get('employeeOtp')  # OTP code
-        
-        # Check OTP first (demo OTP is 123456)
-        if otp != '123456':
-            return render(request, 'employee_login.html', {'error': 'Invalid OTP code. Use 123456 for demo.'})
-        
+        action = request.POST.get('action', 'login')
+        username = request.POST.get('employeeId')
+        password = request.POST.get('employeePassword')
+        otp = request.POST.get('employeeOtp')
+
+        # Generate OTP
+        if action == 'generate_otp':
+            try:
+                user = User.objects.get(username=username)
+                if not user.check_password(password):
+                    context['error'] = 'Invalid credentials'
+                else:
+                    otp_obj = create_otp_for_user(user)
+                    send_otp_email(user, otp_obj)
+                    context['otp_sent'] = True
+                    context['message'] = 'OTP sent to registered email.'
+            except User.DoesNotExist:
+                context['error'] = 'User not found'
+            context['prefill_username'] = username
+            return render(request, 'employee_login.html', context)
+
+        # Verify OTP and login
         user = authenticate(request, username=username, password=password)
-        if user:
-            login(request, user)
-            # Set session timeout to 30 minutes for security
-            request.session.set_expiry(1800)
-            return redirect('dashboard')  # Analyst goes to business analyst dashboard
-        else:
-            return render(request, 'employee_login.html', {'error': 'Invalid credentials'})
-    
-    return render(request, 'employee_login.html')
+        if not user:
+            context['error'] = 'Invalid credentials'
+            return render(request, 'employee_login.html', context)
+        if not otp:
+            context['error'] = 'Enter OTP'
+            return render(request, 'employee_login.html', context)
+        if not verify_otp(user, otp):
+            context['error'] = 'Invalid or expired OTP'
+            context['otp_sent'] = True
+            context['prefill_username'] = username
+            return render(request, 'employee_login.html', context)
+        login(request, user)
+        request.session.set_expiry(1800)
+        return redirect('dashboard')
+    return render(request, 'employee_login.html', context)
 
 @login_required
 def dashboard(request):
@@ -438,57 +534,58 @@ def api_financial_data(request):
     
     return JsonResponse(chart_data)
 
-@login_required
-def api_transactions(request):
-    """API endpoint for real-time transaction data"""
-    from .models import Transaction, Account, AnomalyAlert
-    
-    # Get recent transactions
-    transactions = Transaction.objects.all().order_by('-timestamp')[:20]
-    
-    # Get account balance
-    try:
-        account = Account.objects.get(account_name="TechCorp Solutions")
-        balance = float(account.balance)
-    except Account.DoesNotExist:
-        balance = 0
-    
-    # Get recent alerts
-    alerts = AnomalyAlert.objects.filter(status='ACTIVE').order_by('-created_at')[:5]
-    
-    transaction_data = []
-    for transaction in transactions:
-        transaction_data.append({
-            'id': transaction.transaction_id,
-            'timestamp': transaction.timestamp.strftime('%Y-%m-%d %H:%M:%S'),
-            'amount': float(transaction.amount),
-            'sender': transaction.sender,
-            'receiver': transaction.receiver,
-            'balance': float(transaction.balance),
-            'is_anomaly': transaction.is_anomaly,
-            'anomaly_score': transaction.anomaly_score,
-            'time_ago': get_time_ago(transaction.timestamp)
-        })
-    
-    alert_data = []
-    for alert in alerts:
-        alert_data.append({
-            'id': alert.id,
-            'type': alert.alert_type,
-            'severity': alert.severity,
-            'title': alert.title,
-            'description': alert.description,
-            'created_at': alert.created_at.strftime('%Y-%m-%d %H:%M:%S'),
-            'time_ago': get_time_ago(alert.created_at)
-        })
-    
-    return JsonResponse({
-        'transactions': transaction_data,
-        'alerts': alert_data,
-        'account_balance': balance,
-        'total_transactions': Transaction.objects.count(),
-        'anomaly_count': Transaction.objects.filter(is_anomaly=True).count()
-    })
+def employee_login(request):
+    """Analyst login with 2-step OTP (password only for OTP generation, not for verification)."""
+    User = get_user_model()
+    context = {}
+    if request.method == 'POST':
+        action = request.POST.get('action', 'login')
+        username = request.POST.get('employeeId')
+        password = request.POST.get('employeePassword')
+        otp = request.POST.get('employeeOtp')
+
+        # Generate OTP (require password)
+        if action == 'generate_otp':
+            try:
+                user = User.objects.get(username=username)
+                if not user.check_password(password):
+                    context['error'] = 'Invalid credentials'
+                else:
+                    otp_obj = create_otp_for_user(user)
+                    send_otp_email(user, otp_obj)
+                    context['otp_sent'] = True
+                    context['message'] = 'OTP sent to registered email.'
+                    request.session['otp_user'] = username
+            except User.DoesNotExist:
+                context['error'] = 'User not found'
+            context['prefill_username'] = username
+            return render(request, 'employee_login.html', context)
+
+        # Verify OTP (do not require password again)
+        session_username = request.session.get('otp_user')
+        if not session_username:
+            context['error'] = 'Session expired. Please request OTP again.'
+            return render(request, 'employee_login.html', context)
+        try:
+            user = User.objects.get(username=session_username)
+        except User.DoesNotExist:
+            context['error'] = 'User not found.'
+            return render(request, 'employee_login.html', context)
+        if not otp:
+            context['error'] = 'Enter OTP'
+            context['otp_sent'] = True
+            context['prefill_username'] = session_username
+            return render(request, 'employee_login.html', context)
+        if not verify_otp(user, otp):
+            context['error'] = 'Invalid or expired OTP'
+            context['otp_sent'] = True
+            context['prefill_username'] = session_username
+            return render(request, 'employee_login.html', context)
+        login(request, user)
+        request.session.set_expiry(1800)
+        request.session.pop('otp_user', None)
+        return redirect('dashboard')
+    return render(request, 'employee_login.html', context)
 
 def get_time_ago(timestamp):
     """Helper function to get time ago string"""

@@ -279,6 +279,28 @@ class FinancialAlert(models.Model):
     def __str__(self):
         return f"{self.company.name} - {self.alert_type} - {self.severity}"
 
+class OneTimePassword(models.Model):
+    """Stores OTP codes for user email verification during login."""
+    from django.contrib.auth.models import User
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='otps')
+    code = models.CharField(max_length=6)
+    purpose = models.CharField(max_length=30, default='login')
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+    is_used = models.BooleanField(default=False)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['user', 'purpose', 'is_used']),
+            models.Index(fields=['expires_at'])
+        ]
+
+    def __str__(self):
+        return f"OTP {self.code} for {self.user.username} ({'used' if self.is_used else 'active'})"
+
+    def is_expired(self):
+        return timezone.now() > self.expires_at or self.is_used
+
 class DataImportLog(models.Model):
     """Log for tracking data imports"""
     from django.contrib.auth.models import User

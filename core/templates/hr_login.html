@@ -32,20 +32,27 @@
                 {% if error %}
                     <div class="error-message">{{ error }}</div>
                 {% endif %}
+                {% if message %}
+                    <div class="success-message">{{ message }}</div>
+                {% endif %}
                 <div class="input-group">
                     <label for="hrId">CEO Email</label>
-                    <input type="email" id="hrId" name="hrId" required aria-describedby="hr-email-help">
+                    <input type="email" id="hrId" name="hrId" value="{{ prefill_username }}" required aria-describedby="hr-email-help">
                 </div>
                 <div class="input-group">
                     <label for="hrPassword">Password</label>
                     <input type="password" id="hrPassword" name="hrPassword" required aria-describedby="hr-password-help">
                 </div>
-                <div class="input-group">
-                    <label for="hrOtp">OTP Code</label>
-                    <input type="text" id="hrOtp" name="hrOtp" required aria-describedby="hr-otp-help" placeholder="Enter OTP">
-                    <small id="hr-otp-help">Demo OTP: 123456</small>
-                </div>
-                <button type="submit">Login</button>
+                {% if otp_sent %}
+                    <div class="input-group">
+                        <label for="hrOtp">OTP Code</label>
+                        <input type="text" id="hrOtp" name="hrOtp" required placeholder="Enter OTP">
+                        <small id="hr-otp-help">An OTP has been emailed. It expires in 5 minutes.</small>
+                    </div>
+                    <button type="submit" name="action" value="login">Login</button>
+                {% else %}
+                    <button type="submit" name="action" value="generate_otp">Send OTP</button>
+                {% endif %}
             </form>
         </div>
          <p class="admin-contact">Forgot password? Please contact your Administrator.</p>

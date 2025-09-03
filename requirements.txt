@@ -6,4 +6,7 @@ sqlparse>=0.5.3
 asgiref>=3.9.1
 tzdata>=2025.2
 
+# Added for Supabase OTP email integration
+supabase
+
 

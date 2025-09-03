@@ -30,20 +30,27 @@
             {% if error %}
                 <div class="error-message">{{ error }}</div>
             {% endif %}
+            {% if message %}
+                <div class="success-message">{{ message }}</div>
+            {% endif %}
             <div class="input-group">
                 <label for="employeeId">Analyst Email</label>
-                <input type="email" id="employeeId" name="employeeId" required aria-describedby="employee-email-help">
+                <input type="email" id="employeeId" name="employeeId" value="{{ prefill_username }}" required aria-describedby="employee-email-help">
             </div>
             <div class="input-group">
                 <label for="employeePassword">Password</label>
                 <input type="password" id="employeePassword" name="employeePassword" required aria-describedby="employee-password-help">
             </div>
-            <div class="input-group">
-                <label for="employeeOtp">OTP Code</label>
-                <input type="text" id="employeeOtp" name="employeeOtp" required aria-describedby="employee-otp-help" placeholder="Enter OTP">
-                <small id="employee-otp-help">Demo OTP: 123456</small>
-            </div>
-            <button type="submit">Login</button>
+            {% if otp_sent %}
+                <div class="input-group">
+                    <label for="employeeOtp">OTP Code</label>
+                    <input type="text" id="employeeOtp" name="employeeOtp" required placeholder="Enter OTP">
+                    <small id="employee-otp-help">An OTP has been emailed. It expires in 5 minutes.</small>
+                </div>
+                <button type="submit" name="action" value="login">Login</button>
+            {% else %}
+                <button type="submit" name="action" value="generate_otp">Send OTP</button>
+            {% endif %}
         </form>
         <p class="admin-contact">Forgot your password? Please contact your Administrator.</p>
     </main>

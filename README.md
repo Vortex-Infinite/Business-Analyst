@@ -198,6 +198,19 @@ python manage.py import_financial_data "Dataset/" --company-name "ORBIS Financia
 - Session management with security protocols
 - Secure authentication with Vortex Infinite standards
 
+## 🔐 OTP Email (Supabase) Configuration
+
+Login now uses a 2-step OTP flow. To enable email delivery via Supabase, set these environment variables before running the server (PowerShell example):
+
+```
+setx SUPABASE_URL "https://your-project.supabase.co"
+setx SUPABASE_ANON_KEY "your-anon-key"
+```
+
+Restart your terminal so Django picks up the variables. If they are not set, OTP codes will print to the server console (development mode) for manual entry.
+
+Edge Function / SMTP integration can replace the placeholder in `core/otp_utils.py` for production email sending.
+
 ### ✅ Financial Dashboard
 - Real-time financial metrics with live updates
 - Interactive charts and graphs powered by advanced algorithms

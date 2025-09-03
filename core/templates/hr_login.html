@@ -35,6 +35,7 @@
                 {% if message %}
                     <div class="success-message">{{ message }}</div>
                 {% endif %}
+                {% if not otp_sent %}
                 <div class="input-group">
                     <label for="hrId">CEO Email</label>
                     <input type="email" id="hrId" name="hrId" value="{{ prefill_username }}" required aria-describedby="hr-email-help">
@@ -43,16 +44,25 @@
                     <label for="hrPassword">Password</label>
                     <input type="password" id="hrPassword" name="hrPassword" required aria-describedby="hr-password-help">
                 </div>
-                {% if otp_sent %}
-                    <div class="input-group">
-                        <label for="hrOtp">OTP Code</label>
-                        <input type="text" id="hrOtp" name="hrOtp" required placeholder="Enter OTP">
-                        <small id="hr-otp-help">An OTP has been emailed. It expires in 5 minutes.</small>
-                    </div>
-                    <button type="submit" name="action" value="login">Login</button>
+                <button type="submit" name="action" value="generate_otp">Send OTP</button>
                 {% else %}
-                    <button type="submit" name="action" value="generate_otp">Send OTP</button>
+                <div class="input-group">
+                    <label for="hrOtp">OTP Code</label>
+                    <input type="text" id="hrOtp" name="hrOtp" required placeholder="Enter OTP">
+                    <small id="hr-otp-help">An OTP has been emailed. It expires in 5 minutes.</small>
+                </div>
+                <button type="submit" name="action" value="login">Login</button>
                 {% endif %}
+            </form>
+        </div>
+        <div id="hr-otp-form" class="hidden">
+            <p class="otp-instruction">OTP verification is part of Firebase multi-factor authentication. For this demo, use OTP: 123456</p>
+            <form id="otp-verify-form">
+                <div class="input-group">
+                    <label for="otp">Enter OTP</label>
+                    <input type="text" id="otp" placeholder="Enter 6-digit OTP" maxlength="6" required aria-describedby="otp-help">
+                </div>
+                <button type="submit">Verify & Proceed</button>
             </form>
         </div>
          <p class="admin-contact">Forgot password? Please contact your Administrator.</p>

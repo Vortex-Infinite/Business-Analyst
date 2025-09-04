@@ -40,6 +40,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'core.context_processors.user_context',  # Add dynamic user context
             ],
         },
     },
@@ -47,14 +48,27 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'backend.wsgi.application'
 
+# backend/settings.py
+
+# Just add this database configuration to your existing settings.py
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'orbis',
+        'USER': 'orbis_admin',
+        'PASSWORD': 'pass',
+        'HOST': 'localhost',
+        'PORT': '5432',
     }
 }
 
-# AUTH_USER_MODEL = 'core.User' # Ensure 'U' is uppercase
+# Keep everything else as is for now
+
+
+
+
+
+# AUTH_USER_MODEL = 'core.User' # Enable this later after proper migration setup
 
 # --- The rest of the file can remain as default ---
 LANGUAGE_CODE = 'en-us'

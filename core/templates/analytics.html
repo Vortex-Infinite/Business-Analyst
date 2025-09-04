@@ -452,16 +452,16 @@
                     <button class="profile-btn" id="profile-btn">
                         <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="Profile">
                         <div class="profile-info">
-                            <div class="name">Business Analyst</div>
-                            <div class="email">analyst@orbis.com</div>
+                            <div class="name">{{ current_user_name }}</div>
+                            <div class="email">{{ current_user_email|default:"analyst@orbis.com" }}</div>
                         </div>
                         <i class="fas fa-chevron-down"></i>
                     </button>
                     
                     <div class="profile-dropdown" id="profile-dropdown">
                         <div class="dropdown-header">
-                            <div class="name">Business Analyst</div>
-                            <div class="email">analyst@orbis.com</div>
+                            <div class="name">{{ current_user_name }}</div>
+                            <div class="email">{{ current_user_email|default:"analyst@orbis.com" }}</div>
                         </div>
                         <div class="dropdown-section">
                             <a href="{% url 'profile_settings' %}" class="dropdown-item">

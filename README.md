@@ -19,7 +19,7 @@ A comprehensive AI Powered Django-based financial analytics platform for busines
 Business-Analyst/
 │
 ├── 📄 manage.py                    # Django's command-line utility
-├── 🗄 db.sqlite3                  # SQLite database
+├── 🗄 archive/db.sqlite3          # Archived SQLite database (read-only)
 ├── 📄 LICENSE                     # Project license
 ├── 📄 README.md                   # This file
 │
@@ -115,10 +115,14 @@ pip install django
 pip install python-decouple  # If using environment variables
 ```
 
-### 5. Database Setup
+### 5. Database Setup (PostgreSQL)
 ```bash
 python manage.py makemigrations
 python manage.py migrate
+
+# Database notes
+- Active database: PostgreSQL (`orbis`) with user `orbis_admin`
+- Legacy SQLite has been archived at `archive/db.sqlite3` and is no longer used by the app
 ```
 
 ### 6. Create Superuser (Optional)

@@ -1,13 +1,26 @@
 from django.db import models
-# from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import User
 from django.utils import timezone
+from django.conf import settings
 from decimal import Decimal
 
+# Custom User model can be enabled later
 # class User(AbstractUser):
 #     """Custom User model extending Django's AbstractUser"""
 #     # Add any additional fields you need here
 #     phone_number = models.CharField(max_length=15, blank=True, null=True)
 #     address = models.TextField(blank=True, null=True)
+#     full_name = models.CharField(max_length=100, blank=True)
+#     job_title = models.CharField(max_length=100, default='Business Analyst')
+#     
+#     def get_display_name(self):
+#         """Return display name for the user"""
+#         if self.full_name:
+#             return self.full_name
+#         elif self.first_name and self.last_name:
+#             return f"{self.first_name} {self.last_name}"
+#         else:
+#             return self.username
 #     
 #     def __str__(self):
 #         return self.username
@@ -88,7 +101,7 @@ class AnomalyAlert(models.Model):
     threshold_value = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True)
     current_value = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True)
     resolved_at = models.DateTimeField(null=True, blank=True)
-    resolved_by = models.ForeignKey('auth.User', on_delete=models.SET_NULL, null=True, blank=True)
+    resolved_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
@@ -214,7 +227,6 @@ class QuarterlySummary(models.Model):
 
 class UserProfile(models.Model):
     """Extended user profile for business analytics"""
-    from django.contrib.auth.models import User
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     role = models.CharField(max_length=50, choices=[
         ('CEO', 'Chief Executive Officer'),
@@ -268,7 +280,7 @@ class FinancialAlert(models.Model):
     is_active = models.BooleanField(default=True)
     is_resolved = models.BooleanField(default=False)
     resolved_at = models.DateTimeField(null=True, blank=True)
-    resolved_by = models.ForeignKey('auth.User', on_delete=models.SET_NULL, null=True, blank=True)
+    resolved_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
     
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -281,7 +293,6 @@ class FinancialAlert(models.Model):
 
 class OneTimePassword(models.Model):
     """Stores OTP codes for user email verification during login."""
-    from django.contrib.auth.models import User
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='otps')
     code = models.CharField(max_length=6)
     purpose = models.CharField(max_length=30, default='login')
@@ -303,7 +314,6 @@ class OneTimePassword(models.Model):
 
 class DataImportLog(models.Model):
     """Log for tracking data imports"""
-    from django.contrib.auth.models import User
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     import_type = models.CharField(max_length=50, choices=[
         ('CSV', 'CSV Import'),

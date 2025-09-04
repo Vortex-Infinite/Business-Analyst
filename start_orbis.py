@@ -88,6 +88,19 @@ def install_dependencies(venv_python):
 def run_migrations(venv_python):
     """Run database migrations"""
     try:
+        print("Checking database configuration...")
+        
+        # Check which database backend is being used
+        result_check = subprocess.run([str(venv_python), '-c', 
+            "import os; os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'backend.settings'); "
+            "import django; django.setup(); "
+            "from django.conf import settings; "
+            "print(f'Database: {settings.DATABASES[\"default\"][\"ENGINE\"]}')"], 
+            capture_output=True, text=True, cwd=os.getcwd())
+        
+        if result_check.returncode == 0:
+            print(f"[INFO] {result_check.stdout.strip()}")
+        
         print("Running database migrations...")
         result = subprocess.run([str(venv_python), 'manage.py', 'migrate'], 
                               capture_output=True, text=True)

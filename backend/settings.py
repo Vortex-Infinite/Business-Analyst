@@ -47,19 +47,48 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'backend.wsgi.application'
 
-# backend/settings.py
+# Database configuration with automatic fallback
+# Try PostgreSQL first, fallback to SQLite if PostgreSQL is not available
+import django.db
 
-# Just add this database configuration to your existing settings.py
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'orbis',
-        'USER': 'orbis_admin',
-        'PASSWORD': 'pass',
-        'HOST': 'localhost',
-        'PORT': '5432',
-    }
-}
+def get_database_config():
+    """Get database configuration with PostgreSQL fallback to SQLite"""
+    # Check if PostgreSQL is available and configured
+    pg_available = False
+    try:
+        import psycopg2
+        # Try to connect to PostgreSQL
+        import socket
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.settimeout(1)  # 1 second timeout
+        result = sock.connect_ex(('localhost', 5432))
+        sock.close()
+        pg_available = (result == 0)
+    except (ImportError, Exception):
+        pg_available = False
+    
+    if pg_available:
+        print("[INFO] Using PostgreSQL database")
+        return {
+            'default': {
+                'ENGINE': 'django.db.backends.postgresql',
+                'NAME': 'orbis',
+                'USER': 'orbis_admin',
+                'PASSWORD': 'pass',
+                'HOST': 'localhost',
+                'PORT': '5432',
+            }
+        }
+    else:
+        print("[INFO] PostgreSQL not available, using SQLite database")
+        return {
+            'default': {
+                'ENGINE': 'django.db.backends.sqlite3',
+                'NAME': BASE_DIR / 'db.sqlite3',
+            }
+        }
+
+DATABASES = get_database_config()
 
 # Keep everything else as is for now
 

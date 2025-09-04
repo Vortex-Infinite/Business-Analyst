@@ -5,7 +5,9 @@ joblib>=1.3.0
 sqlparse>=0.5.3
 asgiref>=3.9.1
 tzdata>=2025.2
-psycopg2-binary>=2.9.0
+# PostgreSQL support (optional - will fallback to SQLite if not available)
+psycopg2-binary>=2.9.0; platform_system != "Windows"
+psycopg2-binary>=2.9.0; platform_system == "Windows"
 
 
 

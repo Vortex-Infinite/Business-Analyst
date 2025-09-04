@@ -2,6 +2,42 @@
 
 This guide explains how to run the ORBIS Business Analytics System on different operating systems using the appropriate launcher scripts.
 
+## Database Requirements
+
+**Good News: PostgreSQL is NOT mandatory!**
+
+The software has been configured with automatic database detection:
+
+### 🔄 **Automatic Database Selection**
+- **First Choice**: PostgreSQL (if available and running)
+- **Fallback**: SQLite (works on all systems without setup)
+
+### 📊 **Database Options**
+
+#### Option 1: SQLite (Recommended for most users)
+- ✅ **No setup required** - works out of the box
+- ✅ **Cross-platform** - works on Windows, Mac, Linux
+- ✅ **Portable** - database file travels with the application
+- ✅ **Perfect for development and small deployments**
+
+#### Option 2: PostgreSQL (Optional for production)
+- 🔧 **Requires installation** and setup
+- 🚀 **Better performance** for large datasets
+- 👥 **Multi-user support**
+- 🏢 **Recommended for production environments**
+
+### 🎯 **What happens when you run the software:**
+1. System checks if PostgreSQL is available on port 5432
+2. If PostgreSQL is found → uses PostgreSQL database
+3. If PostgreSQL is NOT found → automatically uses SQLite
+4. No manual configuration needed!
+
+### 💾 **Your data location:**
+- **SQLite**: Stored in `db.sqlite3` file in the project folder
+- **PostgreSQL**: Stored in PostgreSQL server (if installed)
+
+---
+
 ## Available Launchers
 
 ### 1. Universal Python Launcher (Recommended for all systems)

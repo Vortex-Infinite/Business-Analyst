@@ -1,0 +1,700 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ORBIS - Preferences</title>
+    <link rel="stylesheet" href="{% static 'assets/css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/css/dashboard_style.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .preferences-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .preferences-header {
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--border-color);
+        }
+        
+        .preferences-header h1 {
+            color: var(--text-primary);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 2rem;
+        }
+        
+        .preferences-grid {
+            display: grid;
+            gap: 2rem;
+        }
+        
+        .preference-section {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border-color);
+        }
+        
+        .section-title {
+            color: var(--text-primary);
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .preference-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .preference-item:last-child {
+            border-bottom: none;
+        }
+        
+        .preference-info {
+            flex: 1;
+        }
+        
+        .preference-label {
+            color: var(--text-primary);
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+        
+        .preference-description {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+        
+        .preference-control {
+            margin-left: 1rem;
+        }
+        
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+        
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--border-color);
+            transition: 0.3s;
+            border-radius: 24px;
+        }
+        
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: 0.3s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .toggle-slider {
+            background-color: var(--primary-color);
+        }
+        
+        input:checked + .toggle-slider:before {
+            transform: translateX(26px);
+        }
+        
+        .form-select {
+            padding: 0.5rem 1rem;
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+            min-width: 150px;
+        }
+        
+        .form-select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+            justify-content: center;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color), #5a7cfa);
+            color: white;
+            border: none;
+            padding: 0.75rem 2rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(64, 123, 255, 0.3);
+        }
+        
+        .btn-secondary {
+            background: transparent;
+            color: var(--text-secondary);
+            border: 1px solid var(--border-color);
+            padding: 0.75rem 2rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-secondary:hover {
+            background: var(--hover-bg);
+            color: var(--text-primary);
+        }
+        
+        .success-message {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            margin-bottom: 1rem;
+            transition: color 0.3s ease;
+        }
+        
+        .back-button:hover {
+            color: var(--primary-color);
+        }
+        
+        .range-input {
+            width: 100%;
+            margin: 0.5rem 0;
+        }
+        
+        .range-value {
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+        
+        @media (max-width: 768px) {
+            .preferences-container {
+                padding: 1rem;
+            }
+            
+            .preference-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+            
+            .preference-control {
+                margin-left: 0;
+            }
+        }
+    </style>
+</head>
+<body class="dashboard-page dark-mode">
+    <!-- Enhanced Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo-container">
+                <div class="logo-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <div class="sidebar-logo">ORBIS</div>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <div class="nav-section">
+                <div class="nav-section-title">OVERVIEW</div>
+                <a href="{% url 'dashboard' %}" class="nav-item" data-page="dashboard">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="{% url 'analytics' %}" class="nav-item" data-page="analytics">
+                    <i class="fas fa-chart-pie"></i>
+                    <span>Analytics</span>
+                </a>
+                <a href="{% url 'transaction' %}" class="nav-item" data-page="transaction">
+                    <i class="fas fa-exchange-alt"></i>
+                    <span>Transaction</span>
+                </a>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-section-title">BUSINESS</div>
+                <a href="#" class="nav-item" data-page="finance">
+                    <i class="fas fa-dollar-sign"></i>
+                    <span>Finance</span>
+                </a>
+                <a href="#" class="nav-item" data-page="expenses">
+                    <i class="fas fa-receipt"></i>
+                    <span>Expenses</span>
+                </a>
+                <a href="#" class="nav-item" data-page="income">
+                    <i class="fas fa-money-bill-wave"></i>
+                    <span>Income Tracking</span>
+                </a>
+                <a href="#" class="nav-item" data-page="performance">
+                    <i class="fas fa-trophy"></i>
+                    <span>Performance</span>
+                </a>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-section-title">TOOLS</div>
+                <a href="#" class="nav-item" data-page="documents">
+                    <i class="fas fa-folder"></i>
+                    <span>Documents</span>
+                </a>
+                <a href="{% url 'preferences' %}" class="nav-item active" data-page="settings">
+                    <i class="fas fa-cog"></i>
+                    <span>Settings</span>
+                </a>
+            </div>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="theme-switch-container">
+                <span class="theme-label">Dark Mode</span>
+                <label class="theme-switch" for="theme-checkbox">
+                    <input type="checkbox" id="theme-checkbox">
+                    <div class="slider round">
+                        <div class="knob">
+                            <i class="fas fa-sun"></i>
+                            <i class="fas fa-moon"></i>
+                        </div>
+                    </div>
+                </label>
+            </div>
+            <button class="sidebar-toggle" id="sidebar-toggle">
+                <i class="fas fa-chevron-left"></i>
+                <span>Collapse</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Content Wrapper -->
+    <div class="main-wrapper">
+        <!-- Enhanced Header -->
+        <header class="dashboard-header">
+            <div class="header-left">
+                <div class="header-title">
+                    Preferences
+                    <span id="live-time"></span>
+                </div>
+            </div>
+            <div class="header-actions">
+                <div class="notifications">
+                    <button class="notification-btn">
+                        <i class="fas fa-bell"></i>
+                        <span class="notification-badge">3</span>
+                    </button>
+                </div>
+                <div class="profile-container">
+                    <button class="profile-btn" id="profile-btn">
+                        <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="Profile">
+                        <div class="profile-info">
+                            <div class="name">Business Analyst</div>
+                            <div class="email">analyst@orbis.com</div>
+                        </div>
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    
+                    <div class="profile-dropdown" id="profile-dropdown">
+                        <div class="dropdown-header">
+                            <div class="name">Business Analyst</div>
+                            <div class="email">analyst@orbis.com</div>
+                        </div>
+                        <div class="dropdown-section">
+                            <a href="{% url 'profile_settings' %}" class="dropdown-item">
+                                <i class="fas fa-user"></i>
+                                Profile Settings
+                            </a>
+                            <a href="{% url 'preferences' %}" class="dropdown-item">
+                                <i class="fas fa-cog"></i>
+                                Preferences
+                            </a>
+                            <a href="{% url 'help_support' %}" class="dropdown-item">
+                                <i class="fas fa-question-circle"></i>
+                                Help & Support
+                            </a>
+                        </div>
+                        <div class="dropdown-section">
+                            <button class="dropdown-item logout-btn" id="logout-btn">
+                                <i class="fas fa-sign-out-alt"></i>
+                                Sign Out
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="preferences-container">
+                <a href="{% url 'dashboard' %}" class="back-button">
+                    <i class="fas fa-arrow-left"></i>
+                    Back to Dashboard
+                </a>
+                
+                <div class="preferences-header">
+                    <h1>
+                        <i class="fas fa-sliders-h"></i>
+                        Preferences
+                    </h1>
+                </div>
+
+                {% if success_message %}
+                <div class="success-message">
+                    <i class="fas fa-check-circle"></i>
+                    {{ success_message }}
+                </div>
+                {% endif %}
+
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="preferences-grid">
+                        <!-- Display & Theme -->
+                        <div class="preference-section">
+                            <h3 class="section-title">
+                                <i class="fas fa-palette"></i>
+                                Display & Theme
+                            </h3>
+                            
+                            <div class="preference-item">
+                                <div class="preference-info">
+                                    <div class="preference-label">Dark Mode</div>
+                                    <div class="preference-description">Use dark theme throughout the application</div>
+                                </div>
+                                <div class="preference-control">
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" name="dark_mode" checked>
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="preference-item">
+                                <div class="preference-info">
+                                    <div class="preference-label">Sidebar Collapsed</div>
+                                    <div class="preference-description">Keep sidebar collapsed by default</div>
+                                </div>
+                                <div class="preference-control">
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" name="sidebar_collapsed">
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="preference-item">
+                                <div class="preference-info">
+                                    <div class="preference-label">Animation Speed</div>
+                                    <div class="preference-description">Control interface animation speed</div>
+                                </div>
+                                <div class="preference-control">
+                                    <select name="animation_speed" class="form-select">
+                                        <option value="slow">Slow</option>
+                                        <option value="normal" selected>Normal</option>
+                                        <option value="fast">Fast</option>
+                                        <option value="none">No Animations</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Notifications -->
+                        <div class="preference-section">
+                            <h3 class="section-title">
+                                <i class="fas fa-bell"></i>
+                                Notifications
+                            </h3>
+                            
+                            <div class="preference-item">
+                                <div class="preference-info">
+                                    <div class="preference-label">Email Notifications</div>
+                                    <div class="preference-description">Receive important updates via email</div>
+                                </div>
+                                <div class="preference-control">
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" name="email_notifications" checked>
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="preference-item">
+                                <div class="preference-info">
+                                    <div class="preference-label">Push Notifications</div>
+                                    <div class="preference-description">Get real-time browser notifications</div>
+                                </div>
+                                <div class="preference-control">
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" name="push_notifications" checked>
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="preference-item">
+                                <div class="preference-info">
+                                    <div class="preference-label">Transaction Alerts</div>
+                                    <div class="preference-description">Alert when large transactions occur</div>
+                                </div>
+                                <div class="preference-control">
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" name="transaction_alerts" checked>
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="preference-item">
+                                <div class="preference-info">
+                                    <div class="preference-label">Alert Threshold</div>
+                                    <div class="preference-description">Minimum amount for transaction alerts</div>
+                                </div>
+                                <div class="preference-control">
+                                    <select name="alert_threshold" class="form-select">
+                                        <option value="1000">$1,000</option>
+                                        <option value="5000" selected>$5,000</option>
+                                        <option value="10000">$10,000</option>
+                                        <option value="25000">$25,000</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Dashboard -->
+                        <div class="preference-section">
+                            <h3 class="section-title">
+                                <i class="fas fa-tachometer-alt"></i>
+                                Dashboard
+                            </h3>
+                            
+                            <div class="preference-item">
+                                <div class="preference-info">
+                                    <div class="preference-label">Auto-refresh Data</div>
+                                    <div class="preference-description">Automatically refresh dashboard data</div>
+                                </div>
+                                <div class="preference-control">
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" name="auto_refresh" checked>
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="preference-item">
+                                <div class="preference-info">
+                                    <div class="preference-label">Refresh Interval</div>
+                                    <div class="preference-description">How often to refresh data (minutes)</div>
+                                </div>
+                                <div class="preference-control">
+                                    <select name="refresh_interval" class="form-select">
+                                        <option value="1">1 minute</option>
+                                        <option value="5" selected>5 minutes</option>
+                                        <option value="10">10 minutes</option>
+                                        <option value="30">30 minutes</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="preference-item">
+                                <div class="preference-info">
+                                    <div class="preference-label">Default View</div>
+                                    <div class="preference-description">Default dashboard view when logging in</div>
+                                </div>
+                                <div class="preference-control">
+                                    <select name="default_view" class="form-select">
+                                        <option value="dashboard" selected>Dashboard</option>
+                                        <option value="analytics">Analytics</option>
+                                        <option value="transaction">Transactions</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="preference-item">
+                                <div class="preference-info">
+                                    <div class="preference-label">Data Density</div>
+                                    <div class="preference-description">Number of data points to display</div>
+                                </div>
+                                <div class="preference-control">
+                                    <select name="data_density" class="form-select">
+                                        <option value="compact">Compact</option>
+                                        <option value="normal" selected>Normal</option>
+                                        <option value="detailed">Detailed</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Security -->
+                        <div class="preference-section">
+                            <h3 class="section-title">
+                                <i class="fas fa-shield-alt"></i>
+                                Security
+                            </h3>
+                            
+                            <div class="preference-item">
+                                <div class="preference-info">
+                                    <div class="preference-label">Two-Factor Authentication</div>
+                                    <div class="preference-description">Add extra security to your account</div>
+                                </div>
+                                <div class="preference-control">
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" name="two_factor_auth">
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="preference-item">
+                                <div class="preference-info">
+                                    <div class="preference-label">Session Timeout</div>
+                                    <div class="preference-description">Auto-logout after inactivity</div>
+                                </div>
+                                <div class="preference-control">
+                                    <select name="session_timeout" class="form-select">
+                                        <option value="15">15 minutes</option>
+                                        <option value="30" selected>30 minutes</option>
+                                        <option value="60">1 hour</option>
+                                        <option value="240">4 hours</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="preference-item">
+                                <div class="preference-info">
+                                    <div class="preference-label">Login Notifications</div>
+                                    <div class="preference-description">Get notified of new login attempts</div>
+                                </div>
+                                <div class="preference-control">
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" name="login_notifications" checked>
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Export & Data -->
+                        <div class="preference-section">
+                            <h3 class="section-title">
+                                <i class="fas fa-download"></i>
+                                Export & Data
+                            </h3>
+                            
+                            <div class="preference-item">
+                                <div class="preference-info">
+                                    <div class="preference-label">Default Export Format</div>
+                                    <div class="preference-description">Preferred format for data exports</div>
+                                </div>
+                                <div class="preference-control">
+                                    <select name="export_format" class="form-select">
+                                        <option value="csv" selected>CSV</option>
+                                        <option value="xlsx">Excel (XLSX)</option>
+                                        <option value="pdf">PDF</option>
+                                        <option value="json">JSON</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="preference-item">
+                                <div class="preference-info">
+                                    <div class="preference-label">Currency Display</div>
+                                    <div class="preference-description">How to display currency values</div>
+                                </div>
+                                <div class="preference-control">
+                                    <select name="currency_display" class="form-select">
+                                        <option value="usd" selected>USD ($)</option>
+                                        <option value="eur">EUR (€)</option>
+                                        <option value="gbp">GBP (£)</option>
+                                        <option value="inr">INR (₹)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="preference-item">
+                                <div class="preference-info">
+                                    <div class="preference-label">Date Format</div>
+                                    <div class="preference-description">Preferred date display format</div>
+                                </div>
+                                <div class="preference-control">
+                                    <select name="date_format" class="form-select">
+                                        <option value="mdy" selected>MM/DD/YYYY</option>
+                                        <option value="dmy">DD/MM/YYYY</option>
+                                        <option value="ymd">YYYY-MM-DD</option>
+                                        <option value="relative">Relative (2 days ago)</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="btn-group">
+                        <button type="submit" class="btn-primary">
+                            <i class="fas fa-save"></i>
+                            Save Preferences
+                        </button>
+                        <button type="button" class="btn-secondary" onclick="window.history.back()">
+                            Cancel
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </main>
+    </div>
+
+    <script src="{% static 'assets/js/dashboard.js' %}"></script>
+</body>
+</html>

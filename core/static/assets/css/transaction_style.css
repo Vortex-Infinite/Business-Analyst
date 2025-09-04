@@ -1,0 +1,457 @@
+/* Transaction Page Specific Styles */
+
+/* Page transition animation */
+body.dashboard-page {
+    animation: fadeInPage 0.5s ease forwards;
+}
+
+@keyframes fadeInPage {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Transaction Header */
+.transaction-header {
+    margin-bottom: 32px;
+    padding: 24px 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.page-title {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 16px;
+    font-family: 'Poppins', 'Segoe UI', 'Arial Unicode MS', 'Noto Sans', sans-serif;
+}
+
+.account-info {
+    margin-top: 16px;
+}
+
+.account-name {
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+    font-family: 'Poppins', 'Segoe UI', 'Arial Unicode MS', 'Noto Sans', sans-serif;
+}
+
+.account-details {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin: 0;
+    display: flex;
+    gap: 16px;
+    align-items: center;
+}
+
+.account-number {
+    font-weight: 500;
+}
+
+.account-type {
+    font-weight: 400;
+}
+
+/* Transaction Grid Layout */
+.transaction-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    height: calc(100vh - 250px);
+}
+
+/* Transaction Box Styling */
+.transaction-box {
+    background-color: var(--card-color);
+    border-radius: 12px;
+    box-shadow: 0 2px 8px var(--shadow-color);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.box-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: var(--card-color);
+}
+
+.box-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.box-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.action-btn {
+    width: 32px;
+    height: 32px;
+    border: none;
+    background-color: var(--input-bg);
+    color: var(--text-secondary);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.action-btn:hover {
+    background-color: var(--accent-color);
+    color: white;
+}
+
+.box-content {
+    padding: 24px;
+    flex: 1;
+    overflow-y: auto;
+}
+
+/* Live Transaction Styles */
+.transaction-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.transaction-item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px;
+    background-color: var(--input-bg);
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.transaction-item:hover {
+    background-color: var(--border-color);
+}
+
+.transaction-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    color: white;
+    flex-shrink: 0;
+}
+
+.transaction-icon.credit {
+    background: linear-gradient(135deg, var(--success), #16a085);
+}
+
+.transaction-icon.debit {
+    background: linear-gradient(135deg, var(--error), #dc2626);
+}
+
+.transaction-details {
+    flex: 1;
+}
+
+.transaction-description {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+}
+
+.transaction-time {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.transaction-amount {
+    font-size: 16px;
+    font-weight: 700;
+    font-family: 'Poppins', 'Segoe UI', 'Arial Unicode MS', 'Noto Sans', sans-serif;
+}
+
+.transaction-amount.credit {
+    color: var(--success);
+}
+
+.transaction-amount.debit {
+    color: var(--error);
+}
+
+/* Anomaly Detection Styles */
+.anomaly-status {
+    margin-bottom: 24px;
+    padding: 16px;
+    background-color: var(--input-bg);
+    border-radius: 8px;
+}
+
+.status-indicator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.status-indicator.safe {
+    color: var(--success);
+}
+
+.status-indicator.warning {
+    color: var(--warning);
+}
+
+.status-indicator.danger {
+    color: var(--error);
+}
+
+.anomaly-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.anomaly-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px;
+    background-color: var(--input-bg);
+    border-radius: 6px;
+    border-left: 4px solid transparent;
+}
+
+.anomaly-item.low {
+    border-left-color: var(--info);
+}
+
+.anomaly-item.medium {
+    border-left-color: var(--warning);
+}
+
+.anomaly-item.high {
+    border-left-color: var(--error);
+}
+
+.anomaly-item.resolved {
+    border-left-color: var(--success);
+}
+
+.anomaly-icon {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    font-size: 12px;
+    color: white;
+    flex-shrink: 0;
+}
+
+.anomaly-item.low .anomaly-icon {
+    background-color: var(--info);
+}
+
+.anomaly-item.medium .anomaly-icon {
+    background-color: var(--warning);
+}
+
+.anomaly-item.high .anomaly-icon {
+    background-color: var(--error);
+}
+
+.anomaly-item.resolved .anomaly-icon {
+    background-color: var(--success);
+}
+
+.anomaly-details {
+    flex: 1;
+}
+
+.anomaly-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+}
+
+.anomaly-description {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+    line-height: 1.4;
+}
+
+.anomaly-time {
+    font-size: 11px;
+    color: var(--text-secondary);
+}
+
+.anomaly-severity {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 8px;
+    border-radius: 12px;
+    text-align: center;
+    min-width: 60px;
+}
+
+.anomaly-severity.low {
+    background-color: rgba(59, 130, 246, 0.1);
+    color: var(--info);
+}
+
+.anomaly-severity.medium {
+    background-color: rgba(245, 158, 11, 0.1);
+    color: var(--warning);
+}
+
+.anomaly-severity.high {
+    background-color: rgba(239, 68, 68, 0.1);
+    color: var(--error);
+}
+
+.anomaly-severity.resolved {
+    background-color: rgba(34, 197, 94, 0.1);
+    color: var(--success);
+}
+
+/* Anomaly Summary */
+.anomaly-summary {
+    border-top: 1px solid var(--border-color);
+    padding-top: 16px;
+}
+
+.summary-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+}
+
+.stat-item {
+    text-align: center;
+    padding: 12px 8px;
+    background-color: var(--input-bg);
+    border-radius: 6px;
+}
+
+.stat-value {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+}
+
+.stat-label {
+    font-size: 11px;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .transaction-grid {
+        grid-template-columns: 1fr;
+        height: auto;
+    }
+    
+    .account-details {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+    
+    .summary-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* Dark Mode Specific Adjustments */
+body.dark-mode .transaction-box {
+    background-color: var(--card-color);
+}
+
+body.dark-mode .box-header {
+    background-color: var(--card-color);
+}
+
+body.dark-mode .transaction-item {
+    background-color: var(--input-bg);
+}
+
+body.dark-mode .anomaly-status {
+    background-color: var(--input-bg);
+}
+
+body.dark-mode .anomaly-item {
+    background-color: var(--input-bg);
+}
+
+body.dark-mode .stat-item {
+    background-color: var(--input-bg);
+}
+
+/* Sidebar scrollbar consistency for transaction page */
+.sidebar-nav {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+
+.sidebar-nav::-webkit-scrollbar {
+    width: 6px;
+}
+
+.sidebar-nav::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+    transition: background-color 0.3s ease;
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(255, 255, 255, 0.4);
+}
+
+/* Dynamic scroll effects for transaction page */
+.sidebar.scrolled {
+    box-shadow: 2px 0 20px rgba(0, 0, 0, 0.2);
+}
+
+.dashboard-header.scrolled {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    backdrop-filter: blur(15px);
+}
+
+body.scrolling .nav-item {
+    transition: all 0.2s ease;
+}
+
+body.scrolling .sidebar {
+    backdrop-filter: blur(5px);
+}

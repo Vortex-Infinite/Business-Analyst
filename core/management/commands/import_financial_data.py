@@ -42,9 +42,9 @@ class Command(BaseCommand):
             return Decimal('0.00')
 
     def parse_date(self, date_str):
-        """Parse date string in DD-MM-YYYY format"""
+        """Parse date string in YYYY-MM-DD format"""
         try:
-            return datetime.strptime(date_str.strip(), '%d-%m-%Y').date()
+            return datetime.strptime(date_str.strip(), '%Y-%m-%d').date()
         except:
             return None
 

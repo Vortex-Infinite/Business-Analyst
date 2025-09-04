@@ -1,0 +1,323 @@
+{% load static %}
+{% load currency_filters %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ORBIS - Transaction Management</title>
+    <link rel="stylesheet" href="{% static 'assets/css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/css/dashboard_style.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/css/transaction_style.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="dashboard-page dark-mode">
+    <!-- Enhanced Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo-container">
+                <div class="logo-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <div class="sidebar-logo">ORBIS</div>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <div class="nav-section">
+                <div class="nav-section-title">OVERVIEW</div>
+                <a href="{% url 'dashboard' %}" class="nav-item" data-page="dashboard">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="{% url 'analytics' %}" class="nav-item" data-page="analytics">
+                    <i class="fas fa-chart-pie"></i>
+                    <span>Analytics</span>
+                </a>
+                <a href="{% url 'transaction' %}" class="nav-item active" data-page="transaction">
+                    <i class="fas fa-exchange-alt"></i>
+                    <span>Transaction</span>
+                </a>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-section-title">BUSINESS</div>
+                <a href="#" class="nav-item" data-page="finance">
+                    <i class="fas fa-dollar-sign"></i>
+                    <span>Finance</span>
+                </a>
+                <a href="#" class="nav-item" data-page="expenses">
+                    <i class="fas fa-receipt"></i>
+                    <span>Expenses</span>
+                </a>
+                <a href="#" class="nav-item" data-page="income">
+                    <i class="fas fa-money-bill-wave"></i>
+                    <span>Income Tracking</span>
+                </a>
+                <a href="#" class="nav-item" data-page="performance">
+                    <i class="fas fa-trophy"></i>
+                    <span>Performance</span>
+                </a>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-section-title">TOOLS</div>
+                <a href="#" class="nav-item" data-page="documents">
+                    <i class="fas fa-folder"></i>
+                    <span>Documents</span>
+                </a>
+                <a href="#" class="nav-item" data-page="settings">
+                    <i class="fas fa-cog"></i>
+                    <span>Settings</span>
+                </a>
+            </div>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="theme-switch-container">
+                <span class="theme-label">Dark Mode</span>
+                <label class="theme-switch" for="theme-checkbox">
+                    <input type="checkbox" id="theme-checkbox">
+                    <div class="slider round">
+                        <div class="knob">
+                            <i class="fas fa-sun"></i>
+                            <i class="fas fa-moon"></i>
+                        </div>
+                    </div>
+                </label>
+            </div>
+            <button class="sidebar-toggle" id="sidebar-toggle">
+                <i class="fas fa-chevron-left"></i>
+                <span>Collapse</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Content Wrapper -->
+    <div class="main-wrapper">
+        <!-- Enhanced Header -->
+        <header class="dashboard-header">
+            <div class="header-left">
+                <div class="header-title">
+                    Transaction Management
+                    <span id="live-time"></span>
+                </div>
+            </div>
+            <div class="header-actions">
+                <div class="notifications">
+                    <button class="notification-btn">
+                        <i class="fas fa-bell"></i>
+                        <span class="notification-badge">3</span>
+                    </button>
+                </div>
+                <div class="profile-container">
+                    <button class="profile-btn" id="profile-btn">
+                        <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="Profile">
+                        <div class="profile-info">
+                            <div class="name">Business Analyst</div>
+                            <div class="email">analyst@orbis.com</div>
+                        </div>
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    
+                    <div class="profile-dropdown" id="profile-dropdown">
+                        <div class="dropdown-header">
+                            <div class="name">Business Analyst</div>
+                            <div class="email">analyst@orbis.com</div>
+                        </div>
+                        <div class="dropdown-section">
+                            <a href="#" class="dropdown-item">
+                                <i class="fas fa-user"></i>
+                                Profile Settings
+                            </a>
+                            <a href="#" class="dropdown-item">
+                                <i class="fas fa-cog"></i>
+                                Preferences
+                            </a>
+                            <a href="#" class="dropdown-item">
+                                <i class="fas fa-question-circle"></i>
+                                Help & Support
+                            </a>
+                        </div>
+                        <div class="dropdown-section">
+                            <button class="dropdown-item logout-btn" id="logout-btn">
+                                <i class="fas fa-sign-out-alt"></i>
+                                Sign Out
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Transaction Content -->
+        <main class="main-content">
+            <!-- Transaction Header -->
+            <div class="transaction-header">
+                <div class="account-info">
+                    <h2 class="account-name">{{ account_name }}</h2>
+                    <p class="account-details">
+                        <span class="account-number">ACC: {{ account_number }}</span>
+                        <span class="account-type">{{ account_type }}</span>
+                    </p>
+                    <div class="account-balance">
+                        <span class="balance-label">Current Balance:</span>
+                        <span class="balance-amount">₹{{ account.balance|floatformat:2 }}</span>
+                    </div>
+                </div>
+                <div class="transaction-stats">
+                    <div class="stat-item">
+                        <div class="stat-value">{{ anomaly_stats.total }}</div>
+                        <div class="stat-label">Total Transactions</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">{{ anomaly_stats.anomalies }}</div>
+                        <div class="stat-label">Anomalies Detected</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">{{ anomaly_stats.percentage }}%</div>
+                        <div class="stat-label">Anomaly Rate</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Transaction Dashboard Grid -->
+            <div class="transaction-grid">
+                <!-- Live Transaction Box -->
+                <div class="transaction-box">
+                    <div class="box-header">
+                        <h3 class="box-title">
+                            <i class="fas fa-exchange-alt"></i>
+                            Live Transaction
+                        </h3>
+                        <div class="box-actions">
+                            <button class="action-btn">
+                                <i class="fas fa-refresh"></i>
+                            </button>
+                            <button class="action-btn">
+                                <i class="fas fa-expand"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="box-content">
+                        <div class="transaction-list" id="transaction-list">
+                            {% if recent_transactions %}
+                                {% for transaction in recent_transactions %}
+                                <div class="transaction-item {% if transaction.is_anomaly %}anomaly{% endif %}">
+                                    <div class="transaction-icon {% if transaction.receiver == account_name %}credit{% else %}debit{% endif %}">
+                                        <i class="fas fa-{% if transaction.receiver == account_name %}arrow-down{% else %}arrow-up{% endif %}"></i>
+                                    </div>
+                                    <div class="transaction-details">
+                                        <div class="transaction-description">
+                                            {% if transaction.receiver == account_name %}
+                                                Payment Received - {{ transaction.sender }}
+                                            {% else %}
+                                                Payment Sent - {{ transaction.receiver }}
+                                            {% endif %}
+                                            {% if transaction.is_anomaly %}
+                                                <span class="anomaly-badge">ANOMALY</span>
+                                            {% endif %}
+                                        </div>
+                                        <div class="transaction-time">{{ transaction.timestamp|date:"M d, H:i" }}</div>
+                                    </div>
+                                    <div class="transaction-amount {% if transaction.receiver == account_name %}credit{% else %}debit{% endif %}">
+                                        {% if transaction.receiver == account_name %}+{% else %}-{% endif %}₹{{ transaction.amount|floatformat:2 }}
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <div class="no-transactions">
+                                    <i class="fas fa-info-circle"></i>
+                                    <p>No transactions found. Start the transaction generator to see live data.</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Anomaly Detection Box -->
+                <div class="transaction-box">
+                    <div class="box-header">
+                        <h3 class="box-title">
+                            <i class="fas fa-shield-alt"></i>
+                            Anomaly Detection
+                        </h3>
+                        <div class="box-actions">
+                            <button class="action-btn">
+                                <i class="fas fa-cog"></i>
+                            </button>
+                            <button class="action-btn">
+                                <i class="fas fa-expand"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="box-content">
+                        <div class="anomaly-status">
+                            <div class="status-indicator {% if alert_stats.high > 0 %}danger{% elif alert_stats.medium > 0 %}warning{% else %}safe{% endif %}">
+                                <i class="fas fa-{% if alert_stats.high > 0 %}exclamation-triangle{% elif alert_stats.medium > 0 %}exclamation-circle{% else %}check-circle{% endif %}"></i>
+                                <span>
+                                    {% if alert_stats.high > 0 %}
+                                        {{ alert_stats.high }} High Risk Alert{{ alert_stats.high|pluralize }}
+                                    {% elif alert_stats.medium > 0 %}
+                                        {{ alert_stats.medium }} Medium Risk Alert{{ alert_stats.medium|pluralize }}
+                                    {% else %}
+                                        All Systems Normal
+                                    {% endif %}
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div class="anomaly-list" id="anomaly-list">
+                            {% if recent_alerts %}
+                                {% for alert in recent_alerts %}
+                                <div class="anomaly-item {{ alert.severity|lower }}">
+                                    <div class="anomaly-icon">
+                                        <i class="fas fa-{% if alert.severity == 'HIGH' %}exclamation-triangle{% elif alert.severity == 'MEDIUM' %}exclamation-circle{% else %}info-circle{% endif %}"></i>
+                                    </div>
+                                    <div class="anomaly-details">
+                                        <div class="anomaly-title">{{ alert.title }}</div>
+                                        <div class="anomaly-description">{{ alert.description }}</div>
+                                        <div class="anomaly-time">{{ alert.created_at|date:"M d, H:i" }}</div>
+                                    </div>
+                                    <div class="anomaly-severity {{ alert.severity|lower }}">{{ alert.severity }}</div>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <div class="no-alerts">
+                                    <i class="fas fa-shield-alt"></i>
+                                    <p>No active alerts. All transactions are normal.</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="anomaly-summary">
+                            <div class="summary-stats">
+                                <div class="stat-item">
+                                    <div class="stat-value">{{ alert_stats.high }}</div>
+                                    <div class="stat-label">High Risk</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-value">{{ alert_stats.medium }}</div>
+                                    <div class="stat-label">Medium Risk</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-value">{{ alert_stats.low }}</div>
+                                    <div class="stat-label">Low Risk</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-value">{{ alert_stats.resolved }}</div>
+                                    <div class="stat-label">Resolved</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="{% static 'assets/js/dashboard.js' %}"></script>
+    <script src="{% static 'assets/js/transaction.js' %}"></script>
+</body>
+</html>

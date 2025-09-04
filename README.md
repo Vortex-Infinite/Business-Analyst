@@ -1,15 +1,17 @@
-# 🏢 ORBIS Financial - Business Analyst Platform
+# 🏢 ORBIS AI Powered Financial - Business Analyst Platform
+### Powered by Vortex Infinite ⚡
 
-A comprehensive Django-based financial analytics platform for business intelligence, CEO dashboards, and financial data management.
+A comprehensive AI Powered Django-based financial analytics platform for business intelligence, CEO dashboards, and financial data management. Built with cutting-edge technology and innovative solutions by **Vortex Infinite**.
 
 ## 🚀 Features
 
 - **Executive Dashboard**: Comprehensive CEO dashboard with real-time financial metrics
-- **Business Analytics**: Interactive charts and financial data visualization
-- **Role-based Access**: Separate portals for CEO and Financial Analysts
-- **Real-time Data**: Live financial data with API endpoints
-- **Responsive Design**: Modern UI with dark/light theme support
-- **Financial Data Management**: Import and analyze CSV financial datasets
+- **Business Analytics**: Interactive charts and financial data visualization powered by advanced algorithms
+- **Role-based Access**: Secure portals for CEO and Financial Analysts
+- **Real-time Data**: Live financial data with high-performance API endpoints
+- **Responsive Design**: Modern UI with dark/light theme support and mobile optimization
+- **Financial Data Management**: Import and analyze CSV financial datasets with AI-driven insights
+- **Advanced Security**: Enterprise-grade authentication and data protection
 
 ## 🏗️ Project Structure
 
@@ -17,7 +19,7 @@ A comprehensive Django-based financial analytics platform for business intellige
 Business-Analyst/
 │
 ├── 📄 manage.py                    # Django's command-line utility
-├── � db.sqlite3                  # SQLite database
+├── 🗄 archive/db.sqlite3          # Archived SQLite database (read-only)
 ├── 📄 LICENSE                     # Project license
 ├── 📄 README.md                   # This file
 │
@@ -47,7 +49,7 @@ Business-Analyst/
 │   │       ├── 📁 css/
 │   │       │   ├── 📄 style.css           # Main stylesheet
 │   │       │   ├── 📄 dashboard_style.css # Dashboard-specific styles
-│   │       │   └── � ceo_dashboard_style.css # CEO dashboard styles
+│   │       │   └── 🎨 ceo_dashboard_style.css # CEO dashboard styles
 │   │       ├── 📁 js/
 │   │       │   ├── 📄 script.js           # Main JavaScript
 │   │       │   ├── 📄 dashboard.js        # Dashboard functionality
@@ -113,10 +115,14 @@ pip install django
 pip install python-decouple  # If using environment variables
 ```
 
-### 5. Database Setup
+### 5. Database Setup (PostgreSQL)
 ```bash
 python manage.py makemigrations
 python manage.py migrate
+
+# Database notes
+- Active database: PostgreSQL (`orbis`) with user `orbis_admin`
+- Legacy SQLite has been archived at `archive/db.sqlite3` and is no longer used by the app
 ```
 
 ### 6. Create Superuser (Optional)
@@ -136,21 +142,24 @@ python manage.py runserver
 
 Visit: `http://127.0.0.1:8000`
 
+           Or
+run the start_orbis.bat file and 
+
+Visit: `http://127.0.0.1:8000`
+
+
 ## 🎯 Usage
 
 ### Test Credentials
 
-**CEO Portal:**
-- Username: `ceo`
-- Password: `ceo123`
 
 **Financial Analyst Portal:**
-- Username: `analyst` 
-- Password: `analyst123`
+- Username: `hr@abcinc.com` 
+- Password: `password`
 
 **Admin Access:**
 - Username: `admin`
-- Password: `admin123`
+- Password: `adminss123`
 
 ### Importing Financial Data
 
@@ -180,37 +189,50 @@ python manage.py import_financial_data "Dataset/" --company-name "ORBIS Financia
 
 ## 🎨 Frontend Technologies
 
-- **HTML5 & CSS3**: Responsive layouts
-- **JavaScript (ES6+)**: Interactive functionality
-- **Chart.js**: Data visualization
-- **Font Awesome**: Icons
-- **Google Fonts**: Typography (Poppins)
+- **HTML5 & CSS3**: Responsive layouts with modern design principles
+- **JavaScript (ES6+)**: Interactive functionality and dynamic content
+- **Chart.js**: Advanced data visualization and analytics
+- **Font Awesome**: Professional iconography
+- **Google Fonts**: Typography optimization (Poppins)
 
 ## 🏢 Key Features Implemented
 
 ### ✅ Authentication System
 - Role-based login (CEO, Analyst, Admin)
-- Session management
-- Secure authentication
+- Session management with security protocols
+- Secure authentication with Vortex Infinite standards
+
+## 🔐 OTP Email (Supabase) Configuration
+
+Login now uses a 2-step OTP flow. To enable email delivery via Supabase, set these environment variables before running the server (PowerShell example):
+
+```
+setx SUPABASE_URL "https://your-project.supabase.co"
+setx SUPABASE_ANON_KEY "your-anon-key"
+```
+
+Restart your terminal so Django picks up the variables. If they are not set, OTP codes will print to the server console (development mode) for manual entry.
+
+Edge Function / SMTP integration can replace the placeholder in `core/otp_utils.py` for production email sending.
 
 ### ✅ Financial Dashboard
-- Real-time financial metrics
-- Interactive charts and graphs
-- Year-over-year comparisons
-- Quarterly and monthly summaries
+- Real-time financial metrics with live updates
+- Interactive charts and graphs powered by advanced algorithms
+- Year-over-year comparisons with trend analysis
+- Quarterly and monthly summaries with insights
 
 ### ✅ Data Management
-- CSV import functionality
-- Database optimization
-- Data validation and processing
+- CSV import functionality with validation
+- Database optimization for performance
+- Data validation and processing with error handling
 
 ### ✅ User Experience
 - Dark/Light theme support
-- Responsive design
-- Intuitive navigation
-- Professional UI/UX
+- Responsive design for all devices
+- Intuitive navigation and user flows
+- Professional UI/UX crafted by Vortex Infinite
 
-## � Development
+## 🛠 Development
 
 ### Adding New Features
 1. Create models in `core/models.py`
@@ -248,28 +270,66 @@ Key settings in `backend/settings.py`:
 ## 🤝 Contributing
 
 1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Run tests
-5. Submit a pull request
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Make your changes with proper documentation
+4. Run tests and ensure code quality
+5. Submit a pull request with detailed description
+
+### Development Guidelines
+- Follow PEP 8 coding standards
+- Write comprehensive tests
+- Document all new features
+- Maintain Vortex Infinite code quality standards
 
 ## 📝 License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 
-## 👥 Authors
+## 👥 Authors & Contributors
 
-- **Vortex Infinite** - *Initial work* - [GitHub](https://github.com/Vortex-Infinite)
+- **Vortex Infinite** - *Lead Development & Architecture* - [GitHub](https://github.com/Vortex-Infinite)
+- **Gowshik-S** - *Current Maintainer* - [GitHub](https://github.com/Gowshik-S)
+
+### Special Thanks
+- All contributors who have helped shape this platform
+- The Django community for excellent framework support
+- Open source libraries that power our analytics
 
 ## 🔮 Future Enhancements
 
-- [ ] Advanced analytics and predictions
-- [ ] Real-time data streaming
-- [ ] Export functionality (PDF, Excel)
-- [ ] Mobile application
-- [ ] Advanced user management
-- [ ] Integration with external APIs
+- [ ] **AI-Powered Analytics**: Advanced machine learning predictions
+- [ ] **Real-time Data Streaming**: WebSocket integration for live updates
+- [ ] **Export Functionality**: PDF, Excel, and custom report generation
+- [ ] **Mobile Application**: React Native companion app
+- [ ] **Advanced User Management**: Enterprise-grade permissions
+- [ ] **External API Integration**: Connect with financial data providers
+- [ ] **Cloud Deployment**: AWS/Azure integration with scalability
+- [ ] **Advanced Visualization**: 3D charts and interactive dashboards
+
+## 🌟 Why Choose Vortex Infinite Solutions?
+
+- **Innovation First**: Cutting-edge technology solutions
+- **Security Focused**: Enterprise-grade security protocols
+- **Performance Optimized**: High-performance applications
+- **User-Centric Design**: Intuitive and powerful interfaces
+- **Scalable Architecture**: Built for growth and expansion
+- **Continuous Support**: Ongoing maintenance and updates
+ 📞 Support & Contact
+
+For technical support, feature requests, or business inquiries:
+
+- GitHub Issues: [Report bugs or request features](https://github.com/Vortex-Infinite/Business-Analyst/issues)
+- Email: devs.vortexinfinite@gmail.com
+- Website: Not Published
 
 ---
 
-**Powered by Django & ORBIS Analytics** © 2025
+<div align="center">
+
+**🚀 Powered by Vortex Infinite - Innovating the Future of Financial Analytics 🚀**
+
+*Transforming data into insights, insights into decisions, decisions into success.*
+
+© 2025 Vortex Infinite. All rights reserved.
+
+The content maintains all the original technical information while presenting it in a more professional and branded manner that reflects the quality standards of Vortex Infinite.

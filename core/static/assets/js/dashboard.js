@@ -6,6 +6,57 @@ document.addEventListener('DOMContentLoaded', function() {
     initCharts();
     initLiveClock();
     initNotifications();
+    initScrollEffects();
+    
+    // No need for formatCurrencyValues since template handles it now
+    
+    // Initialize scroll effects for dynamic sidebar
+    function initScrollEffects() {
+        const mainWrapper = document.querySelector('.main-wrapper');
+        const sidebar = document.querySelector('.sidebar');
+        const header = document.querySelector('.dashboard-header');
+        
+        if (mainWrapper) {
+            let scrollTimeout;
+            
+            mainWrapper.addEventListener('scroll', function() {
+                const scrollTop = this.scrollTop;
+                
+                // Add scrolled class for enhanced shadow
+                if (scrollTop > 10) {
+                    sidebar?.classList.add('scrolled');
+                    header?.classList.add('scrolled');
+                } else {
+                    sidebar?.classList.remove('scrolled');
+                    header?.classList.remove('scrolled');
+                }
+                
+                // Clear existing timeout
+                clearTimeout(scrollTimeout);
+                
+                // Add scrolling class for animations
+                document.body.classList.add('scrolling');
+                
+                // Remove scrolling class after scroll ends
+                scrollTimeout = setTimeout(() => {
+                    document.body.classList.remove('scrolling');
+                }, 150);
+            });
+        }
+        
+        // Also handle window scroll for fallback
+        window.addEventListener('scroll', function() {
+            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+            
+            if (scrollTop > 10) {
+                sidebar?.classList.add('scrolled');
+                header?.classList.add('scrolled');
+            } else {
+                sidebar?.classList.remove('scrolled');
+                header?.classList.remove('scrolled');
+            }
+        });
+    }
     
     // Theme Management (Same as login/index pages)
     function initTheme() {
@@ -42,6 +93,17 @@ document.addEventListener('DOMContentLoaded', function() {
         if (sidebarToggle && sidebar) {
             sidebarToggle.addEventListener('click', function() {
                 sidebar.classList.toggle('collapsed');
+                
+                // Update toggle button icon direction
+                const icon = sidebarToggle.querySelector('i');
+                if (sidebar.classList.contains('collapsed')) {
+                    icon.classList.remove('fa-chevron-left');
+                    icon.classList.add('fa-chevron-right');
+                } else {
+                    icon.classList.remove('fa-chevron-right');
+                    icon.classList.add('fa-chevron-left');
+                }
+                
                 localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
             });
         }
@@ -49,19 +111,38 @@ document.addEventListener('DOMContentLoaded', function() {
         // Restore sidebar state
         if (localStorage.getItem('sidebarCollapsed') === 'true') {
             sidebar?.classList.add('collapsed');
+            // Also update the icon for restored state
+            const icon = sidebarToggle?.querySelector('i');
+            if (icon) {
+                icon.classList.remove('fa-chevron-left');
+                icon.classList.add('fa-chevron-right');
+            }
         }
         
         // Navigation items
         const navItems = document.querySelectorAll('.nav-item');
         navItems.forEach(item => {
             item.addEventListener('click', function(e) {
-                e.preventDefault();
-                navItems.forEach(nav => nav.classList.remove('active'));
-                this.classList.add('active');
-                
-                // Handle page navigation
-                const page = this.dataset.page;
-                handlePageNavigation(page);
+                // Only prevent default for items without href or with href="#"
+                if (!this.href || this.href.endsWith('#')) {
+                    e.preventDefault();
+                    navItems.forEach(nav => nav.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // Handle page navigation
+                    const page = this.dataset.page;
+                    handlePageNavigation(page);
+                } else {
+                    // For items with real URLs, add a loading transition
+                    navItems.forEach(nav => nav.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // Add a brief transition effect
+                    this.style.transform = 'scale(0.95)';
+                    setTimeout(() => {
+                        this.style.transform = 'translateX(6px)';
+                    }, 150);
+                }
             });
         });
     }
@@ -88,18 +169,10 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         if (logoutBtn) {
-            logoutBtn.addEventListener('click', async function() {
+            logoutBtn.addEventListener('click', function() {
                 if (confirm('Are you sure you want to sign out?')) {
-                    try {
-                        // Clear session data
-                        localStorage.removeItem('currentUser');
-                        localStorage.removeItem('theme');
-                        
-                        // Redirect to login
-                        window.location.href = '/';
-                    } catch (error) {
-                        console.error('Logout error:', error);
-                    }
+                    // Simple redirect to logout - no localStorage manipulation needed
+                    window.location.href = '/logout/';
                 }
             });
         }
@@ -111,13 +184,43 @@ document.addEventListener('DOMContentLoaded', function() {
         if (chartCanvas) {
             const ctx = chartCanvas.getContext('2d');
             
+            // Get dynamic data from Django template
+            let chartData = [];
+            let chartLabels = [];
+            
+            // Check if trend_data is available from Django
+            if (typeof trendData !== 'undefined' && trendData) {
+                try {
+                    const data = JSON.parse(trendData);
+                    chartData = data.map(item => item.revenue);
+                    // Add "25" to month labels in frontend
+                    chartLabels = data.map(item => {
+                        const month = item.month;
+                        if (month === 'Jan' || month === 'Feb' || month === 'Mar') {
+                            return month + ' 26'; // For 2026 months
+                        } else {
+                            return month + ' 25'; // For 2025 months
+                        }
+                    });
+                } catch (e) {
+                    console.error('Error parsing trend data:', e);
+                    // Fallback to static data if parsing fails
+                    chartData = [650000, 720000, 680000, 750000, 820000, 790000, 850000, 847392];
+                    chartLabels = ['Jan 25', 'Feb 25', 'Mar 25', 'Apr 25', 'May 25', 'Jun 25', 'Jul 25', 'Aug 25'];
+                }
+            } else {
+                // Fallback to static data if no Django data
+                chartData = [650000, 720000, 680000, 750000, 820000, 790000, 850000, 847392];
+                chartLabels = ['Jan 25', 'Feb 25', 'Mar 25', 'Apr 25', 'May 25', 'Jun 25', 'Jul 25', 'Aug 25'];
+            }
+            
             new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
+                    labels: chartLabels,
                     datasets: [{
-                        label: 'Revenue',
-                        data: [650000, 720000, 680000, 750000, 820000, 790000, 850000, 847392],
+                        label: 'Monthly Revenue (FY 2025-26)',
+                        data: chartData,
                         borderColor: getComputedStyle(document.documentElement).getPropertyValue('--accent-color').trim(),
                         backgroundColor: 'rgba(66, 153, 225, 0.1)',
                         borderWidth: 3,
@@ -136,6 +239,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     plugins: {
                         legend: {
                             display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return 'Monthly Revenue: ₹' + context.parsed.y.toLocaleString('en-IN');
+                                }
+                            }
                         }
                     },
                     scales: {
@@ -156,7 +266,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             ticks: {
                                 color: getComputedStyle(document.documentElement).getPropertyValue('--text-secondary').trim(),
                                 callback: function(value) {
-                                    return '$' + value.toLocaleString();
+                                    return '₹' + value.toLocaleString('en-IN');
                                 }
                             }
                         }
@@ -210,12 +320,12 @@ document.addEventListener('DOMContentLoaded', function() {
         const actions = {
             'dashboard': () => console.log('Dashboard selected'),
             'analytics': () => showNotification('Analytics page - Coming soon!', 'info'),
-            'reports': () => showNotification('Reports page - Coming soon!', 'info'),
-            'projects': () => showNotification('Projects page - Coming soon!', 'info'),
+            'transaction': () => window.location.href = '/transaction/',
             'finance': () => showNotification('Finance page - Coming soon!', 'info'),
-            'clients': () => showNotification('Clients page - Coming soon!', 'info'),
+            'expenses': () => showNotification('Expenses page - Coming soon!', 'info'),
+            'income': () => showNotification('Income Tracking page - Coming soon!', 'info'),
             'performance': () => showNotification('Performance page - Coming soon!', 'info'),
-            'documents': () => window.location.href = '/documents/',
+            'documents': () => window.location.href = '/document/',
             'settings': () => showNotification('Settings page - Coming soon!', 'info')
         };
         
@@ -319,11 +429,11 @@ document.addEventListener('DOMContentLoaded', function() {
         metricValues.forEach((element, index) => {
             const finalValue = element.textContent;
             const isPercentage = finalValue.includes('%');
-            const isDollar = finalValue.includes('$');
+            const isRupee = finalValue.includes('₹');
             
             let numericValue;
-            if (isDollar) {
-                numericValue = parseFloat(finalValue.replace(/[$,]/g, ''));
+            if (isRupee) {
+                numericValue = parseFloat(finalValue.replace(/[₹,]/g, ''));
             } else {
                 numericValue = parseFloat(finalValue.replace(/[^0-9.]/g, ''));
             }
@@ -337,8 +447,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     clearInterval(timer);
                 }
                 
-                if (isDollar) {
-                    element.textContent = '$' + Math.floor(currentValue).toLocaleString();
+                if (isRupee) {
+                    element.textContent = '₹' + Math.floor(currentValue).toLocaleString('en-IN');
                 } else if (isPercentage) {
                     element.textContent = currentValue.toFixed(1) + '%';
                 } else {
@@ -351,13 +461,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Animation starts automatically
             }, index * 200);
         });
-    }
-    
-    // Check authentication
-    const currentUser = localStorage.getItem('currentUser');
-    if (!currentUser) {
-        window.location.href = '/';
-        return;
     }
     
     console.log('Professional Dashboard initialized successfully');

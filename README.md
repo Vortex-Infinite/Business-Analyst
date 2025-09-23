@@ -303,7 +303,7 @@ For technical support, feature requests, or business inquiries:
 
 - GitHub Issues: [Report bugs or request features](https://github.com/Vortex-Infinite/Business-Analyst/issues)
 - Email: devs.vortexinfinite@gmail.com
-- Website: Not Published
+- Website: vortexinfinite.xyz
 
 ---
 

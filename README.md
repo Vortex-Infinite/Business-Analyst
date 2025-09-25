@@ -270,8 +270,8 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## 👥 Authors & Contributors
 
-- **Vortex Infinite** - *Lead Development & Architecture* - [GitHub](https://github.com/Vortex-Infinite)
-- **Gowshik-S** - *Current Maintainer* - [GitHub](https://github.com/Gowshik-S)
+- **Vortex Infinite** - *Organization* - [GitHub](https://github.com/Vortex-Infinite)
+- **Gowshik-S** - *Lead Development & Architecture* - [GitHub](https://github.com/Gowshik-S)
 
 ### Special Thanks
 - All contributors who have helped shape this platform

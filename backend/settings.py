@@ -7,6 +7,9 @@ DEBUG = True
 ALLOWED_HOSTS = ['127.0.0.1', 'localhost',
                   'business-analyst-1.onrender.com',
                    'onrender.com' ]
+CSRF_TRUSTED_ORIGINS = [
+    "https://business-analyst-1.onrender.com",
+]
 
 # Application definition
 INSTALLED_APPS = [

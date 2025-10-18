@@ -302,7 +302,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 For technical support, feature requests, or business inquiries:
 
 - GitHub Issues: [Report bugs or request features](https://github.com/Vortex-Infinite/Business-Analyst/issues)
-- Email: devs.vortexinfinite@gmail.com
+- Email: contact@vortexinfinite.xyz
 - Website: vortexinfinite.xyz
 
 ---

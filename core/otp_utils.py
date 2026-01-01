@@ -7,9 +7,8 @@ from datetime import timedelta
 from django.utils import timezone
 from django.contrib.auth.models import User
 from .models import OneTimePassword
+from decouple import config
 
-SUPABASE_URL = os.getenv('SUPABASE_URL')
-SUPABASE_ANON_KEY = os.getenv('SUPABASE_ANON_KEY')
 
 try:
     from supabase import create_client, Client  # type: ignore
@@ -33,12 +32,12 @@ def create_otp_for_user(user: User, ttl_minutes: int = 5) -> OneTimePassword:
     return otp
 
 def send_otp_email(user: User, otp: OneTimePassword) -> bool:
-    """Send OTP via SMTP. Credentials are hardcoded for convenience."""
-    smtp_host = "smtp.gmail.com"  # Gmail SMTP host
-    smtp_port = 587  # Gmail SMTP port
-    smtp_user = "devs.vortexinfinite@gmail.com"  # Gmail address
-    smtp_pass = "fmjh tydf kfpd ceiz"  # Provided Gmail app password
-    sender_email = "devs.vortexinfinite@gmail.com"  # Sender email as requested
+    """Send OTP via SMTP using environment variables for credentials."""
+    smtp_host = config('EMAIL_HOST', default='smtp.gmail.com')
+    smtp_port = config('EMAIL_PORT', default=587, cast=int)
+    smtp_user = config('EMAIL_HOST_USER')
+    smtp_pass = config('EMAIL_HOST_PASSWORD')
+    sender_email = config('EMAIL_FROM', default=smtp_user)
     try:
         msg = MIMEText(f"Your ORBIS login OTP is: {otp.code}\nThis code expires in 5 minutes.")
         msg['Subject'] = 'Your ORBIS Login OTP'

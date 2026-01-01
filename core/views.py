@@ -57,7 +57,83 @@ from datetime import datetime, timedelta
 import json
 from django.views.decorators.csrf import csrf_exempt
 from .otp_utils import create_otp_for_user, send_otp_email, verify_otp
-from .models import DailyFinancialData, Company, QuarterlySummary, UserProfile
+from .models import DailyFinancialData, Company, QuarterlySummary, UserProfile, DailyTransactionSummary, Transaction
+
+import csv
+from django.http import HttpResponse
+
+@login_required
+def download_daily_summary(request):
+    """Download daily transaction summary as CSV"""
+    # Get today's date or specific date from request
+    date_str = request.GET.get('date')
+    if date_str:
+        try:
+            target_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+        except ValueError:
+            target_date = timezone.now().date()
+    else:
+        target_date = timezone.now().date()
+        
+    # Get summary
+    summary = DailyTransactionSummary.objects.filter(date=target_date).first()
+    
+    # Create CSV response
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = f'attachment; filename="transaction_summary_{target_date}.csv"'
+    
+    writer = csv.writer(response)
+    writer.writerow(['Date', 'Total Transactions', 'Total Amount', 'Anomaly Count', 'High Risk Anomalies', 'Avg Transaction Value'])
+    
+    if summary:
+        writer.writerow([
+            summary.date,
+            summary.total_transactions,
+            summary.total_amount,
+            summary.anomaly_count,
+            summary.high_risk_anomalies,
+            summary.avg_transaction_value
+        ])
+    else:
+        # Calculate on the fly if summary doesn't exist yet
+        transactions = Transaction.objects.filter(timestamp__date=target_date)
+        total_transactions = transactions.count()
+        if total_transactions > 0:
+            total_amount = transactions.aggregate(Sum('amount'))['amount__sum'] or 0
+            anomaly_count = transactions.filter(is_anomaly=True).count()
+            high_risk_count = 0  # Simplified for on-the-fly
+            avg_value = total_amount / total_transactions
+            
+            writer.writerow([
+                target_date,
+                total_transactions,
+                total_amount,
+                anomaly_count,
+                high_risk_count,
+                avg_value
+            ])
+        else:
+            writer.writerow([target_date, 0, 0, 0, 0, 0])
+            
+    # Add detailed transaction list below summary
+    writer.writerow([])
+    writer.writerow(['Detailed Transactions'])
+    writer.writerow(['ID', 'Time', 'Sender', 'Receiver', 'Amount', 'Status', 'Balance'])
+    
+    transactions = Transaction.objects.filter(timestamp__date=target_date).order_by('-timestamp')
+    for t in transactions:
+        status = 'ANOMALY' if t.is_anomaly else 'NORMAL'
+        writer.writerow([
+            t.transaction_id,
+            t.timestamp.strftime('%H:%M:%S'),
+            t.sender,
+            t.receiver,
+            t.amount,
+            status,
+            t.balance
+        ])
+        
+    return response
 
 def index(request):
     """Enhanced landing page with real data preview"""

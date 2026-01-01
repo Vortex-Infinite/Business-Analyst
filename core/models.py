@@ -4,27 +4,6 @@ from django.utils import timezone
 from django.conf import settings
 from decimal import Decimal
 
-# Custom User model can be enabled later
-# class User(AbstractUser):
-#     """Custom User model extending Django's AbstractUser"""
-#     # Add any additional fields you need here
-#     phone_number = models.CharField(max_length=15, blank=True, null=True)
-#     address = models.TextField(blank=True, null=True)
-#     full_name = models.CharField(max_length=100, blank=True)
-#     job_title = models.CharField(max_length=100, default='Business Analyst')
-#     
-#     def get_display_name(self):
-#         """Return display name for the user"""
-#         if self.full_name:
-#             return self.full_name
-#         elif self.first_name and self.last_name:
-#             return f"{self.first_name} {self.last_name}"
-#         else:
-#             return self.username
-#     
-#     def __str__(self):
-#         return self.username
-
 class Transaction(models.Model):
     """Transaction model for storing transaction data from Auto_Transaction.py"""
     transaction_id = models.CharField(max_length=100, primary_key=True)
@@ -337,5 +316,23 @@ class DataImportLog(models.Model):
     
     error_message = models.TextField(blank=True, null=True)
     
+
+class DailyTransactionSummary(models.Model):
+    """Daily summary of transactions"""
+    date = models.DateField(unique=True)
+    total_transactions = models.IntegerField(default=0)
+    total_amount = models.DecimalField(max_digits=20, decimal_places=2, default=0)
+    anomaly_count = models.IntegerField(default=0)
+    high_risk_anomalies = models.IntegerField(default=0)
+    avg_transaction_value = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-date']
+        indexes = [
+            models.Index(fields=['date']),
+        ]
+
     def __str__(self):
-        return f"{self.import_type} - {self.import_date} - {self.status}"
+        return f"Summary for {self.date}"

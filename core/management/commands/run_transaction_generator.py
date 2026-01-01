@@ -11,7 +11,7 @@ import joblib
 from sklearn.ensemble import IsolationForest
 import os
 from django.db import connection
-from core.models import Transaction, Account, BalanceHistory, AnomalyAlert
+from core.models import Transaction, Account, BalanceHistory, AnomalyAlert, DailyTransactionSummary
 from decimal import Decimal
 
 class Command(BaseCommand):
@@ -210,6 +210,9 @@ class Command(BaseCommand):
         if is_anomaly:
             self.create_anomaly_alert(transaction, anomaly_score)
         
+        # Update daily summary
+        self.update_daily_summary(transaction)
+
         return transaction
 
     def create_anomaly_alert(self, transaction, anomaly_score):
@@ -239,6 +242,37 @@ class Command(BaseCommand):
             anomaly_score=anomaly_score,
             current_value=Decimal(str(transaction.amount))
         )
+
+    def update_daily_summary(self, transaction):
+        """Update the daily transaction summary"""
+        today = transaction.timestamp.date()
+        
+        summary, created = DailyTransactionSummary.objects.get_or_create(
+            date=today,
+            defaults={
+                'total_transactions': 0,
+                'total_amount': 0,
+                'anomaly_count': 0,
+                'high_risk_anomalies': 0,
+                'avg_transaction_value': 0
+            }
+        )
+        
+        # Update stats
+        summary.total_transactions += 1
+        summary.total_amount += transaction.amount
+        
+        if transaction.is_anomaly:
+            summary.anomaly_count += 1
+            # Check if high risk (e.g., high amount or specific type)
+            if transaction.amount > 100000 or transaction.sender == transaction.receiver:
+                summary.high_risk_anomalies += 1
+        
+        # Recalculate average
+        if summary.total_transactions > 0:
+            summary.avg_transaction_value = summary.total_amount / summary.total_transactions
+            
+        summary.save()
 
     def run_batch_mode(self, count):
         """Run transaction generator for a specific number of transactions"""

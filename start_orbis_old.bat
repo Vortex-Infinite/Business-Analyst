@@ -35,17 +35,18 @@ if errorlevel 1 (
 
 REM Check PostgreSQL connection
 echo [INFO] Checking database configuration...
-echo [INFO] Attempting to connect to PostgreSQL database 'orbis'...
+echo [INFO] Attempting to connect to PostgreSQL database...
 
 "%VENV_PY%" -c "
 import psycopg2
+from decouple import config
 try:
     conn = psycopg2.connect(
-        host='localhost',
-        database='orbis',
-        user='orbis_admin',
-        password='pass',
-        port='5432'
+        host=config('DB_HOST', default='localhost'),
+        database=config('DB_NAME'),
+        user=config('DB_USER'),
+        password=config('DB_PASSWORD'),
+        port=config('DB_PORT', default='5432')
     )
     conn.close()
     print('[SUCCESS] PostgreSQL connection established')

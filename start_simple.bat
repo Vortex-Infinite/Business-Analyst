@@ -15,11 +15,11 @@ if not exist "%VENV_PY%" (
 )
 
 echo [INFO] Starting Django server only...
-echo [INFO] Access at: http://127.0.0.1:8000
+echo [INFO] Access at: http://0.0.0.0:8000
 echo [INFO] Press Ctrl+Break to stop
 echo.
 
-"%VENV_PY%" manage.py runserver
+"%VENV_PY%" manage.py runserver 0.0.0.0:8000
 
 echo.
 echo [INFO] Server stopped

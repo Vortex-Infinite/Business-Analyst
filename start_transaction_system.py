@@ -32,8 +32,8 @@ def start_django_server():
     """Start the Django development server"""
     try:
         print("[INFO] Starting Django development server...")
-        print("[INFO] Server will be available at: http://127.0.0.1:8000")
-        execute_from_command_line(['manage.py', 'runserver'])
+        print("[INFO] Server will be available at: http://0.0.0.0:8000")
+        execute_from_command_line(['manage.py', 'runserver', '0.0.0.0:8000'])
     except KeyboardInterrupt:
         print("\n[INFO] Server stopped by user")
     except Exception as e:

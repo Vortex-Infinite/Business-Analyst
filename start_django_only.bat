@@ -21,12 +21,12 @@ REM Ensure UTF-8 mode for Python IO
 set PYTHONUTF8=1
 
 echo [INFO] Starting Django development server only...
-echo [INFO] Access the application at: http://127.0.0.1:8000
+echo [INFO] Access the application at: http://0.0.0.0:8000
 echo [INFO] Press Ctrl+Break to stop the server
 echo.
 
 REM Start only the Django server
-"%VENV_PY%" manage.py runserver
+"%VENV_PY%" manage.py runserver 0.0.0.0:8000
 
 :end
 echo.

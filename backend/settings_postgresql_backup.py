@@ -4,30 +4,7 @@ import os
 BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-your-secret-key-here'
 DEBUG = True
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost','orbis.gowshik.online']
-
-
-
-CSRF_TRUSTED_ORIGINS = [
-    'https://orbis.gowshik.online',
-    'http://127.0.0.1:8000',
-    'http://localhost:8000'
-]
-
-
-# Email Configuration
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_USE_SSL = False
-EMAIL_HOST_USER = 'devs.vortexinfinite@gmail.com'  # Replace with actual email
-EMAIL_HOST_PASSWORD = 'zila avcs rnsf byhj'  # Must be App Password, not regular password
-DEFAULT_FROM_EMAIL = 'devs.vortexinfinite@gmail.com'
-SERVER_EMAIL = 'devs.vortexinfinite@gmail.com'
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-
-
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost','http://orbis.gowshik.online/','orbis.gowshik.online','http://*.gowshik.online']
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -70,19 +47,12 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'backend.wsgi.application'
 
-
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": "orbis",
-        "USER": "orbis_admin",
-        "PASSWORD": "pass",
-        "HOST": "localhost",
-        "PORT": "5432",
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
-
-
 
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
@@ -98,4 +68,11 @@ LOGOUT_REDIRECT_URL = '/'
 SESSION_COOKIE_AGE = 1800
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 SESSION_SAVE_EVERY_REQUEST = True
+# ...existing code...
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# CSRF Settings
+CSRF_TRUSTED_ORIGINS = ['http://127.0.0.1:8000', 'http://localhost:8000','orbis.gowshik.online','https://orbis.gowshik.online/','http://orbis.gowshik.online']
+CSRF_COOKIE_HTTPONLY = False  # Allow JavaScript to read CSRF cookie
+
+# Authentication settings

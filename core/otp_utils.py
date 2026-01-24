@@ -78,9 +78,10 @@ def send_credentials_email(user: User, plain_password: str) -> bool:
 
 Your login credentials are:
 
-Username: {user.username}
+Email/Username: {user.email}
 Password: {plain_password}
 
+You can log in using your email address at the login page.
 Please change your password after your first login.
 
 Best regards,

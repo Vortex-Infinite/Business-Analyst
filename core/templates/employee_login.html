@@ -33,37 +33,20 @@
             {% if message %}
                 <div class="success-message">{{ message }}</div>
             {% endif %}
-            {% if not otp_sent %}
             <div class="input-group">
                 <label for="employeeId">Analyst Email</label>
-                <input type="email" id="employeeId" name="employeeId" value="{{ prefill_username }}" required aria-describedby="employee-email-help">
+                <input type="email" id="employeeId" name="employeeId" value="{{ prefill_username }}" required aria-describedby="employee-email-help" autofocus>
             </div>
             <div class="input-group">
                 <label for="employeePassword">Password</label>
                 <input type="password" id="employeePassword" name="employeePassword" required aria-describedby="employee-password-help">
             </div>
-            <button type="submit" name="action" value="generate_otp">Send OTP</button>
-            {% else %}
-            <div class="input-group">
-                <label for="employeeOtp">OTP Code</label>
-                <input type="text" id="employeeOtp" name="employeeOtp" required placeholder="Enter OTP">
-                <small id="employee-otp-help">An OTP has been emailed. It expires in 5 minutes.</small>
-            </div>
-            <button type="submit" name="action" value="login">Login</button>
-            {% endif %}
+            <button type="submit" name="action" value="generate_otp">
+                <i class="fas fa-sign-in-alt"></i> Send OTP
+            </button>
         </form>
         <p class="admin-contact">Forgot your password? Please contact your Administrator.</p>
         <p class="admin-contact">New user? <a href="{% url 'register' %}" style="color: var(--primary-color); text-decoration: none;">Register here</a></p>
-          <div id="hr-otp-form" class="hidden">
-            <p class="otp-instruction">OTP verification is part of Firebase multi-factor authentication. For this demo, use OTP: 123456</p>
-            <form id="otp-verify-form">
-                <div class="hidden">
-                    <label for="otp">Enter OTP</label>
-                    <input type="text" id="otp" placeholder="Enter 6-digit OTP" maxlength="6" required aria-describedby="otp-help">
-                </div>
-                <button type="submit">Verify & Proceed</button>
-            </form>
-        </div>
     </main>
     <footer class="powered-by">Powered by Vortex Infinite</footer>
     <script src="{% static 'assets/js/script.js' %}"></script>

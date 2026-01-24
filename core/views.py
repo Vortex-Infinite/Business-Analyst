@@ -76,21 +76,23 @@ def user_register(request):
     
     if request.method == 'POST':
         name = request.POST.get('name', '').strip()
-        username = request.POST.get('username', '').strip()
-        email = request.POST.get('email', '').strip()
+        email = request.POST.get('email', '').strip().lower()
         
         # Validation
-        if not name or not username or not email:
+        if not name or not email:
             context['error'] = 'All fields are required.'
             return render(request, 'register.html', context)
         
-        # Check if username already exists
-        if User.objects.filter(username=username).exists():
-            context['error'] = 'Username already exists. Please choose a different one.'
-            return render(request, 'register.html', context)
+        # Use email as username for simplicity
+        username = email
         
         # Check if email already exists
-        if User.objects.filter(email=email).exists():
+        if User.objects.filter(email__iexact=email).exists():
+            context['error'] = 'Email already registered. Please use a different email.'
+            return render(request, 'register.html', context)
+        
+        # Check if username already exists (same as email)
+        if User.objects.filter(username__iexact=username).exists():
             context['error'] = 'Email already registered. Please use a different email.'
             return render(request, 'register.html', context)
         
@@ -102,7 +104,7 @@ def user_register(request):
         first_name = name_parts[0]
         last_name = name_parts[1] if len(name_parts) > 1 else ''
         
-        # Create user
+        # Create user with email as username
         try:
             user = User.objects.create_user(
                 username=username,
@@ -161,88 +163,232 @@ def hr_login(request):
     context = {}
     if request.method == 'POST':
         action = request.POST.get('action', 'login')
-        username = request.POST.get('hrId')
-        password = request.POST.get('hrPassword')
-        otp = request.POST.get('hrOtp')
+        email_or_username = request.POST.get('hrId', '').strip().lower()
+        password = request.POST.get('hrPassword', '')
+        otp = request.POST.get('hrOtp', '').strip()
+        
+        print(f"[DEBUG] HR login attempt - Action: {action}, Email/Username: '{email_or_username}'")
 
         # Step 1: Generate OTP
         if action == 'generate_otp':
+            if not email_or_username:
+                context['error'] = 'Please enter your email or username'
+                return render(request, 'hr_login.html', context)
+            
             try:
-                user = User.objects.get(username=username)
+                # Try to find user by email first (case-insensitive)
+                user = None
+                try:
+                    user = User.objects.get(email__iexact=email_or_username)
+                    print(f"[DEBUG] HR Found user by email: {user.username}")
+                except User.DoesNotExist:
+                    print(f"[DEBUG] HR User not found by email, trying username...")
+                    try:
+                        user = User.objects.get(username__iexact=email_or_username)
+                        print(f"[DEBUG] HR Found user by username: {user.username}")
+                    except User.DoesNotExist:
+                        print(f"[DEBUG] HR User not found by username either")
+                        raise User.DoesNotExist
+                
                 # Authenticate password first before sending OTP
                 if not user.check_password(password):
                     context['error'] = 'Invalid credentials'
+                    print(f"[DEBUG] HR Password check failed for user: {user.username}")
                 else:
-                    otp_obj = create_otp_for_user(user)
-                    send_otp_email(user, otp_obj)
-                    context['otp_sent'] = True
-                    context['message'] = 'OTP sent to registered email.'
+                    try:
+                        otp_obj = create_otp_for_user(user)
+                        send_otp_email(user, otp_obj)
+                        # Store actual username and email for the verify step
+                        request.session['login_username'] = user.username
+                        request.session['login_email'] = user.email
+                        print(f"[DEBUG] HR OTP sent successfully to {user.email}")
+                        print(f"[DEBUG] HR Redirecting to hr_verify_otp...")
+                        # Redirect to OTP verification page
+                        return redirect('hr_verify_otp')
+                    except Exception as e:
+                        print(f"[DEBUG] HR Error sending OTP: {e}")
+                        context['error'] = 'Failed to send OTP. Please try again.'
+                        context['prefill_username'] = email_or_username
+                        return render(request, 'hr_login.html', context)
             except User.DoesNotExist:
                 context['error'] = 'User not found'
-            context['prefill_username'] = username
+                print(f"[DEBUG] HR User not found with email/username: '{email_or_username}'")
+            context['prefill_username'] = email_or_username
             return render(request, 'hr_login.html', context)
-
-        # Step 2: Verify OTP and login
-        user = authenticate(request, username=username, password=password)
-        if not user:
-            context['error'] = 'Invalid credentials'
-            return render(request, 'hr_login.html', context)
-        if not otp:
-            context['error'] = 'Enter OTP'
-            return render(request, 'hr_login.html', context)
-        if not verify_otp(user, otp):
-            context['error'] = 'Invalid or expired OTP'
-            context['otp_sent'] = True
-            context['prefill_username'] = username
-            return render(request, 'hr_login.html', context)
-        login(request, user)
-        request.session.set_expiry(1800)
-        return redirect('ceo_dashboard')
+    
     return render(request, 'hr_login.html', context)
+
 
 def employee_login(request):
     """Analyst login with 2-step OTP (generate + verify)."""
     User = get_user_model()
     context = {}
     if request.method == 'POST':
+        # Debug: Print ALL POST data
+        print(f"[DEBUG] ========== EMPLOYEE LOGIN POST ==========")
+        print(f"[DEBUG] POST data: {dict(request.POST)}")
+        
         action = request.POST.get('action', 'login')
-        username = request.POST.get('employeeId')
-        password = request.POST.get('employeePassword')
-        otp = request.POST.get('employeeOtp')
+        email_or_username = request.POST.get('employeeId', '').strip()
+        password = request.POST.get('employeePassword', '')
+        otp = request.POST.get('employeeOtp', '').strip()
+        
+        print(f"[DEBUG] Action: '{action}'")
+        print(f"[DEBUG] Email/Username (raw): '{request.POST.get('employeeId')}'")
+        print(f"[DEBUG] Email/Username (stripped): '{email_or_username}'")
+        print(f"[DEBUG] Password provided: {bool(password)}")
 
         # Generate OTP
         if action == 'generate_otp':
+            if not email_or_username:
+                context['error'] = 'Please enter your email or username'
+                return render(request, 'employee_login.html', context)
+            
             try:
-                user = User.objects.get(username=username)
+                # Try to find user by email first (case-insensitive)
+                user = None
+                try:
+                    user = User.objects.get(email__iexact=email_or_username)
+                    print(f"[DEBUG] Found user by email: {user.username}")
+                except User.DoesNotExist:
+                    print(f"[DEBUG] User not found by email, trying username...")
+                    try:
+                        user = User.objects.get(username__iexact=email_or_username)
+                        print(f"[DEBUG] Found user by username: {user.username}")
+                    except User.DoesNotExist:
+                        print(f"[DEBUG] User not found by username either")
+                        raise User.DoesNotExist
+                
                 if not user.check_password(password):
                     context['error'] = 'Invalid credentials'
+                    print(f"[DEBUG] Password check failed for user: {user.username}")
                 else:
-                    otp_obj = create_otp_for_user(user)
-                    send_otp_email(user, otp_obj)
-                    context['otp_sent'] = True
-                    context['message'] = 'OTP sent to registered email.'
+                    try:
+                        otp_obj = create_otp_for_user(user)
+                        send_otp_email(user, otp_obj)
+                        # Store actual username and email for the verify step
+                        request.session['login_username'] = user.username
+                        request.session['login_email'] = user.email
+                        print(f"[DEBUG] OTP sent successfully to {user.email}")
+                        print(f"[DEBUG] Redirecting to employee_verify_otp...")
+                        # Redirect to OTP verification page
+                        return redirect('employee_verify_otp')
+                    except Exception as e:
+                        print(f"[DEBUG] Error sending OTP: {e}")
+                        context['error'] = 'Failed to send OTP. Please try again.'
+                        context['prefill_username'] = email_or_username
+                        return render(request, 'employee_login.html', context)
             except User.DoesNotExist:
                 context['error'] = 'User not found'
-            context['prefill_username'] = username
+                print(f"[DEBUG] User not found with email/username: '{email_or_username}'")
+                # List all users for debugging
+                all_emails = list(User.objects.values_list('email', flat=True))
+                print(f"[DEBUG] Available emails: {all_emails}")
+            context['prefill_username'] = email_or_username
             return render(request, 'employee_login.html', context)
-
-        # Verify OTP and login
-        user = authenticate(request, username=username, password=password)
-        if not user:
-            context['error'] = 'Invalid credentials'
-            return render(request, 'employee_login.html', context)
-        if not otp:
-            context['error'] = 'Enter OTP'
-            return render(request, 'employee_login.html', context)
-        if not verify_otp(user, otp):
-            context['error'] = 'Invalid or expired OTP'
-            context['otp_sent'] = True
-            context['prefill_username'] = username
-            return render(request, 'employee_login.html', context)
-        login(request, user)
-        request.session.set_expiry(1800)
-        return redirect('dashboard')
+    
     return render(request, 'employee_login.html', context)
+
+
+def employee_verify_otp(request):
+    """Separate OTP verification page for employees"""
+    User = get_user_model()
+    context = {}
+    
+    # Check if user has a session with login_username
+    actual_username = request.session.get('login_username')
+    user_email = request.session.get('login_email', '')
+    
+    if not actual_username:
+        context['error'] = 'Session expired. Please login again.'
+        return redirect('employee_login')
+    
+    context['user_email'] = user_email
+    
+    if request.method == 'POST':
+        otp = request.POST.get('employeeOtp', '').strip()
+        
+        print(f"[DEBUG] Verifying OTP for username: {actual_username}")
+        
+        # Get user object
+        try:
+            user = User.objects.get(username=actual_username)
+        except User.DoesNotExist:
+            context['error'] = 'Session expired. Please login again.'
+            return redirect('employee_login')
+        
+        if not otp:
+            context['error'] = 'Please enter the OTP code'
+            return render(request, 'employee_otp.html', context)
+        
+        if not verify_otp(user, otp):
+            context['error'] = 'Invalid or expired OTP. Please try again.'
+            print(f"[DEBUG] OTP verification failed for {user.username}")
+            return render(request, 'employee_otp.html', context)
+        
+        # OTP verified successfully
+        login(request, user)
+        # Clear the session login data after successful login
+        if 'login_username' in request.session:
+            del request.session['login_username']
+        if 'login_email' in request.session:
+            del request.session['login_email']
+        request.session.set_expiry(1800)
+        print(f"[DEBUG] User {user.username} logged in successfully")
+        return redirect('dashboard')
+    
+    return render(request, 'employee_otp.html', context)
+
+
+def hr_verify_otp(request):
+    """Separate OTP verification page for HR/CEO"""
+    User = get_user_model()
+    context = {}
+    
+    # Check if user has a session with login_username
+    actual_username = request.session.get('login_username')
+    user_email = request.session.get('login_email', '')
+    
+    if not actual_username:
+        context['error'] = 'Session expired. Please login again.'
+        return redirect('hr_login')
+    
+    context['user_email'] = user_email
+    
+    if request.method == 'POST':
+        otp = request.POST.get('hrOtp', '').strip()
+        
+        print(f"[DEBUG] HR Verifying OTP for username: {actual_username}")
+        
+        # Get user object
+        try:
+            user = User.objects.get(username=actual_username)
+        except User.DoesNotExist:
+            context['error'] = 'Session expired. Please login again.'
+            return redirect('hr_login')
+        
+        if not otp:
+            context['error'] = 'Please enter the OTP code'
+            return render(request, 'hr_otp.html', context)
+        
+        if not verify_otp(user, otp):
+            context['error'] = 'Invalid or expired OTP. Please try again.'
+            print(f"[DEBUG] HR OTP verification failed for {user.username}")
+            return render(request, 'hr_otp.html', context)
+        
+        # OTP verified successfully
+        login(request, user)
+        # Clear the session login data after successful login
+        if 'login_username' in request.session:
+            del request.session['login_username']
+        if 'login_email' in request.session:
+            del request.session['login_email']
+        request.session.set_expiry(1800)
+        print(f"[DEBUG] HR User {user.username} logged in successfully")
+        return redirect('ceo_dashboard')
+    
+    return render(request, 'hr_otp.html', context)
+
 
 @login_required
 def dashboard(request):
@@ -608,58 +754,6 @@ def api_financial_data(request):
     
     return JsonResponse(chart_data)
 
-def employee_login(request):
-    """Analyst login with 2-step OTP (password only for OTP generation, not for verification)."""
-    User = get_user_model()
-    context = {}
-    if request.method == 'POST':
-        action = request.POST.get('action', 'login')
-        username = request.POST.get('employeeId')
-        password = request.POST.get('employeePassword')
-        otp = request.POST.get('employeeOtp')
-
-        # Generate OTP (require password)
-        if action == 'generate_otp':
-            try:
-                user = User.objects.get(username=username)
-                if not user.check_password(password):
-                    context['error'] = 'Invalid credentials'
-                else:
-                    otp_obj = create_otp_for_user(user)
-                    send_otp_email(user, otp_obj)
-                    context['otp_sent'] = True
-                    context['message'] = 'OTP sent to registered email.'
-                    request.session['otp_user'] = username
-            except User.DoesNotExist:
-                context['error'] = 'User not found'
-            context['prefill_username'] = username
-            return render(request, 'employee_login.html', context)
-
-        # Verify OTP (do not require password again)
-        session_username = request.session.get('otp_user')
-        if not session_username:
-            context['error'] = 'Session expired. Please request OTP again.'
-            return render(request, 'employee_login.html', context)
-        try:
-            user = User.objects.get(username=session_username)
-        except User.DoesNotExist:
-            context['error'] = 'User not found.'
-            return render(request, 'employee_login.html', context)
-        if not otp:
-            context['error'] = 'Enter OTP'
-            context['otp_sent'] = True
-            context['prefill_username'] = session_username
-            return render(request, 'employee_login.html', context)
-        if not verify_otp(user, otp):
-            context['error'] = 'Invalid or expired OTP'
-            context['otp_sent'] = True
-            context['prefill_username'] = session_username
-            return render(request, 'employee_login.html', context)
-        login(request, user)
-        request.session.set_expiry(1800)
-        request.session.pop('otp_user', None)
-        return redirect('dashboard')
-    return render(request, 'employee_login.html', context)
 
 def get_time_ago(timestamp):
     """Helper function to get time ago string"""

@@ -1,0 +1,66 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ORBIS - Verify OTP</title>
+    <link rel="stylesheet" href="{% static 'assets/css/style.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <div class="theme-switch-wrapper">
+        <label class="theme-switch" for="theme-checkbox">
+            <input type="checkbox" id="theme-checkbox" aria-label="Toggle dark mode" />
+            <div class="slider round">
+                <span class="knob">
+                    <i class="fas fa-sun" aria-hidden="true"></i>
+                    <i class="fas fa-moon" aria-hidden="true"></i>
+                </span>
+            </div>
+        </label>
+    </div>
+    <main class="login-container">
+        <h1 class="company-name">ORBIS</h1>
+        <h2>CEO Portal - Verify OTP</h2>
+        <p class="subtitle">Enter the OTP sent to your email</p>
+
+        <form method="post" action="{% url 'hr_verify_otp' %}">
+            {% csrf_token %}
+            {% if error %}
+                <div class="error-message">{{ error }}</div>
+            {% endif %}
+            {% if message %}
+                <div class="success-message">{{ message }}</div>
+            {% endif %}
+            
+            <div style="background: var(--card-bg); padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; text-align: center;">
+                <i class="fas fa-envelope" style="color: var(--primary-color); font-size: 2rem; margin-bottom: 0.5rem;"></i>
+                <p style="color: var(--text-secondary); margin: 0;">OTP sent to</p>
+                <p style="color: var(--text-primary); font-weight: 600; margin: 0.25rem 0;">{{ user_email }}</p>
+            </div>
+
+            <div class="input-group">
+                <label for="hrOtp">Enter OTP Code</label>
+                <input type="text" id="hrOtp" name="hrOtp" required placeholder="Enter 6-digit OTP" maxlength="6" autofocus style="text-align: center; font-size: 1.5rem; letter-spacing: 0.5rem;">
+                <small id="hr-otp-help" style="display: block; text-align: center; margin-top: 0.5rem;">
+                    <i class="fas fa-clock"></i> Code expires in 5 minutes
+                </small>
+            </div>
+            
+            <button type="submit" name="action" value="login">
+                <i class="fas fa-check-circle"></i> Verify & Login
+            </button>
+        </form>
+        
+        <p class="admin-contact" style="text-align: center;">
+            Didn't receive the code? 
+            <a href="{% url 'hr_login' %}" style="color: var(--primary-color); text-decoration: none;">
+                <i class="fas fa-redo"></i> Try again
+            </a>
+        </p>
+    </main>
+    <footer class="powered-by">Powered by Vortex Infinite</footer>
+    <script src="{% static 'assets/js/script.js' %}"></script>
+</body>
+</html>

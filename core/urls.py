@@ -7,7 +7,9 @@ urlpatterns = [
     
     # Authentication pages
     path('hr_login/', views.hr_login, name='hr_login'),
+    path('hr_verify_otp/', views.hr_verify_otp, name='hr_verify_otp'),
     path('employee_login/', views.employee_login, name='employee_login'),
+    path('employee_verify_otp/', views.employee_verify_otp, name='employee_verify_otp'),
     path('register/', views.user_register, name='register'),
     
     # Dashboard and home pages

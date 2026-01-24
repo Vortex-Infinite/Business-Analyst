@@ -1,0 +1,65 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ORBIS - Register</title>
+    <link rel="stylesheet" href="{% static 'assets/css/style.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <div class="theme-switch-wrapper">
+        <label class="theme-switch" for="theme-checkbox">
+            <input type="checkbox" id="theme-checkbox" aria-label="Toggle dark mode" />
+            <div class="slider round">
+                <span class="knob">
+                    <i class="fas fa-sun" aria-hidden="true"></i>
+                    <i class="fas fa-moon" aria-hidden="true"></i>
+                </span>
+            </div>
+        </label>
+    </div>
+    <main class="login-container">
+        <h1 class="company-name">ORBIS</h1>
+        <h2>Employee Registration</h2>
+        <p class="subtitle">Register to get your login credentials</p>
+
+        {% if success %}
+        <div class="success-message" style="background: linear-gradient(135deg, #28a745, #20c997); color: white; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; text-align: center;">
+            <i class="fas fa-check-circle"></i>
+            {{ message }}
+        </div>
+        <p class="admin-contact">
+            <a href="{% url 'employee_login' %}" style="color: var(--primary-color); text-decoration: none;">
+                <i class="fas fa-arrow-left"></i> Back to Login
+            </a>
+        </p>
+        {% else %}
+        <form method="post" action="{% url 'register' %}">
+            {% csrf_token %}
+            {% if error %}
+                <div class="error-message">{{ error }}</div>
+            {% endif %}
+            <div class="input-group">
+                <label for="name">Full Name</label>
+                <input type="text" id="name" name="name" required placeholder="Enter your full name" aria-describedby="name-help">
+            </div>
+            <div class="input-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" required placeholder="Choose a username" aria-describedby="username-help">
+            </div>
+            <div class="input-group">
+                <label for="email">Email Address</label>
+                <input type="email" id="email" name="email" required placeholder="Enter your email address" aria-describedby="email-help">
+                <small id="email-help">Login credentials will be sent to this email.</small>
+            </div>
+            <button type="submit">Submit</button>
+        </form>
+        <p class="admin-contact">Already have an account? <a href="{% url 'employee_login' %}" style="color: var(--primary-color); text-decoration: none;">Login here</a></p>
+        {% endif %}
+    </main>
+    <footer class="powered-by">Powered by Vortex Infinite</footer>
+    <script src="{% static 'assets/js/script.js' %}"></script>
+</body>
+</html>

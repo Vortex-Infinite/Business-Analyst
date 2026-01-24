@@ -64,3 +64,37 @@ def verify_otp(user: User, code: str) -> bool:
     otp.is_used = True
     otp.save(update_fields=['is_used'])
     return True
+
+
+def send_credentials_email(user: User, plain_password: str) -> bool:
+    """Send login credentials via SMTP after user registration."""
+    smtp_host = "smtp.gmail.com"
+    smtp_port = 587
+    smtp_user = "devs.vortexinfinite@gmail.com"
+    smtp_pass = "fmjh tydf kfpd ceiz"
+    sender_email = "devs.vortexinfinite@gmail.com"
+    try:
+        msg = MIMEText(f"""Welcome to ORBIS!
+
+Your login credentials are:
+
+Username: {user.username}
+Password: {plain_password}
+
+Please change your password after your first login.
+
+Best regards,
+ORBIS Team
+""")
+        msg['Subject'] = 'Your ORBIS Login Credentials'
+        msg['From'] = sender_email
+        msg['To'] = user.email
+        with smtplib.SMTP(smtp_host, smtp_port) as server:
+            server.starttls()
+            server.login(smtp_user, smtp_pass)
+            server.sendmail(sender_email, [user.email], msg.as_string())
+        print(f"[CREDENTIALS EMAIL SENT] {user.email}")
+        return True
+    except Exception as e:
+        print(f"Failed to send credentials email: {e}")
+        return False

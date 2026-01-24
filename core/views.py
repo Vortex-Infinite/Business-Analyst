@@ -55,9 +55,83 @@ from django.db.models import Sum, Avg, Max, Min, Count
 from django.utils import timezone
 from datetime import datetime, timedelta
 import json
+import string
+import random
 from django.views.decorators.csrf import csrf_exempt
-from .otp_utils import create_otp_for_user, send_otp_email, verify_otp
+from .otp_utils import create_otp_for_user, send_otp_email, verify_otp, send_credentials_email
 from .models import DailyFinancialData, Company, QuarterlySummary, UserProfile
+
+
+def generate_password(username, length=25):
+    """Generate password as username@(random 25 chars)"""
+    chars = string.ascii_letters + string.digits
+    random_part = ''.join(random.choice(chars) for _ in range(length))
+    return f"{username}@{random_part}"
+
+
+def user_register(request):
+    """User registration for employees only - creates account and sends credentials via email"""
+    User = get_user_model()
+    context = {}
+    
+    if request.method == 'POST':
+        name = request.POST.get('name', '').strip()
+        username = request.POST.get('username', '').strip()
+        email = request.POST.get('email', '').strip()
+        
+        # Validation
+        if not name or not username or not email:
+            context['error'] = 'All fields are required.'
+            return render(request, 'register.html', context)
+        
+        # Check if username already exists
+        if User.objects.filter(username=username).exists():
+            context['error'] = 'Username already exists. Please choose a different one.'
+            return render(request, 'register.html', context)
+        
+        # Check if email already exists
+        if User.objects.filter(email=email).exists():
+            context['error'] = 'Email already registered. Please use a different email.'
+            return render(request, 'register.html', context)
+        
+        # Generate password
+        plain_password = generate_password(username)
+        
+        # Split name into first and last name
+        name_parts = name.split(' ', 1)
+        first_name = name_parts[0]
+        last_name = name_parts[1] if len(name_parts) > 1 else ''
+        
+        # Create user
+        try:
+            user = User.objects.create_user(
+                username=username,
+                email=email,
+                password=plain_password,
+                first_name=first_name,
+                last_name=last_name
+            )
+            
+            # Create UserProfile with default EMPLOYEE role
+            UserProfile.objects.create(
+                user=user,
+                role='EMPLOYEE',
+                access_level='BASIC'
+            )
+            
+            # Send credentials email
+            send_credentials_email(user, plain_password)
+            
+            context['success'] = True
+            context['message'] = 'Your Details has been submitted, check your mail for login credentials.'
+            return render(request, 'register.html', context)
+            
+        except Exception as e:
+            context['error'] = f'Registration failed. Please try again. Error: {str(e)}'
+            return render(request, 'register.html', context)
+    
+    return render(request, 'register.html', context)
+
 
 def index(request):
     """Enhanced landing page with real data preview"""

@@ -6,9 +6,11 @@ SECRET_KEY = 'django-insecure-your-secret-key-here'
 DEBUG = True
 ALLOWED_HOSTS = ['127.0.0.1', 'localhost',
                   'business-analyst-1.onrender.com',
-                   'onrender.com' ]
+                   'onrender.com',
+                'app.orbis.gowshik.online']
 CSRF_TRUSTED_ORIGINS = [
     "https://business-analyst-1.onrender.com",
+  "https://app.orbis.gowshik.online",
 ]
 
 # Application definition
